@@ -60,6 +60,7 @@ public class Neo4jDataSourceService extends ADataSourceService implements IDataS
 		SimpleQuery simpleQuery = (SimpleQuery) query;
 		String queryURL = getQueryURL(getConfiguration().getUrl(), simpleQuery.getCountQuery());
 		String rawResults = execute(queryURL);
+		
 		// TODO go from rawResults to actual count
 		return count;
 	}
