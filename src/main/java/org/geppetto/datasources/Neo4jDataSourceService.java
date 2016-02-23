@@ -32,6 +32,7 @@
  *******************************************************************************/
 package org.geppetto.datasources;
 
+import org.geppetto.core.common.GeppettoHTTPClient;
 import org.geppetto.core.datasources.ADataSourceService;
 import org.geppetto.core.datasources.GeppettoDataSourceException;
 import org.geppetto.core.datasources.IDataSourceService;
@@ -58,11 +59,17 @@ public class Neo4jDataSourceService extends ADataSourceService implements IDataS
 	{
 		int count = -1;
 		SimpleQuery simpleQuery = (SimpleQuery) query;
-		String queryURL = getQueryURL(getConfiguration().getUrl(), simpleQuery.getCountQuery());
-		String rawResults = execute(queryURL);
-		
+		String queryString = customizeQuery(simpleQuery.getCountQuery(), variable);
+		String rawResults = GeppettoHTTPClient.doJSONPost(getConfiguration().getUrl(), queryString);
+
 		// TODO go from rawResults to actual count
 		return count;
+	}
+
+	private String customizeQuery(String query, Variable variable)
+	{
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	/*

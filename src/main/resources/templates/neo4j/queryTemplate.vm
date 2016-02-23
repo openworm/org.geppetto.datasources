@@ -1,0 +1,12 @@
+{  
+  "statements":[  
+    {  
+      "statement":"$QUERY.query",
+      "resultDataContents":[  
+        "row",
+        "graph"
+      ],
+      "includeStats":true
+    }
+  ]
+}

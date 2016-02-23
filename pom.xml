@@ -33,6 +33,12 @@
 			<artifactId>org.springframework.context</artifactId>
 			<version>${spring.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.servicemix.bundles</groupId>
+			<artifactId>org.apache.servicemix.bundles.velocity</artifactId>
+			<version>1.7_6</version>
+		</dependency>
+
 		<!-- test dependencies -->
 		<dependency>
 			<groupId>org.junit</groupId>
@@ -100,7 +106,7 @@
 				<version>2.15</version>
 				<configuration>
 					<junitArtifactName>org.junit:com.springsource.org.junit</junitArtifactName>
-				</configuration>	
+				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.felix</groupId>
