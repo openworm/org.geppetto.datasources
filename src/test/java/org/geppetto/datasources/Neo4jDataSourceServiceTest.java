@@ -113,7 +113,9 @@ public class Neo4jDataSourceServiceTest
 		Neo4jDataSourceService dataSource = new Neo4jDataSourceService();
 
 		SimpleQuery query = GeppettoFactory.eINSTANCE.createSimpleQuery();
-		query.setQuery("MATCH (n:Class) WHERE n.short_form='$ID' RETURN n LIMIT 1;");
+		//Bad query //TODO HANDLE
+		//query.setQuery("MATCH (n:Class) WHERE n.short_form='$ID' RETURN n.label, n.short_form, n.description, n.comment LIMIT 1;");
+		query.setQuery("MATCH (n:VFB:Class { short_form: '$ID' } ) RETURN n.label, n.short_form, n.description, n.description LIMIT 1;");
 		Map<String, Object> properties = new HashMap<String, Object>();
 		properties.put("ID", "FBbt_00100219"); //will be coming from the server
 		properties.put("QUERY", query);
@@ -122,6 +124,7 @@ public class Neo4jDataSourceServiceTest
 
 		Map<String, Object> responseMap = JSONUtility.getAsMap(response);
 		
+		System.out.println(response);
 	}
 
 }
