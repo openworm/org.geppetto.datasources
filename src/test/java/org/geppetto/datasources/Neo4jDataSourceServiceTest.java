@@ -34,9 +34,20 @@ package org.geppetto.datasources;
 
 import static org.junit.Assert.fail;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.geppetto.core.common.GeppettoHTTPClient;
+import org.geppetto.core.common.JSONUtility;
 import org.geppetto.core.datasources.GeppettoDataSourceException;
+import org.geppetto.datasources.utils.VelocityUtils;
+import org.geppetto.model.GeppettoFactory;
+import org.geppetto.model.SimpleQuery;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 /**
  * @author matteocantarelli
@@ -100,8 +111,17 @@ public class Neo4jDataSourceServiceTest
 	public void testFetchVariable() throws GeppettoDataSourceException
 	{
 		Neo4jDataSourceService dataSource = new Neo4jDataSourceService();
-		//TODO add test
-		fail("Not yet implemented");
+
+		SimpleQuery query = GeppettoFactory.eINSTANCE.createSimpleQuery();
+		query.setQuery("MATCH (n:Class) WHERE n.short_form='$ID' RETURN n LIMIT 1;");
+		Map<String, Object> properties = new HashMap<String, Object>();
+		properties.put("ID", "FBbt_00100219"); //will be coming from the server
+		properties.put("QUERY", query);
+		String queryString = VelocityUtils.processTemplate("/templates/neo4j/queryTemplate.vm", properties);
+		String response = GeppettoHTTPClient.doJSONPost("http://vfbdev.inf.ed.ac.uk/neo4jdb/data/transaction", queryString);
+
+		Map<String, Object> responseMap = JSONUtility.getAsMap(response);
+		
 	}
 
 }
