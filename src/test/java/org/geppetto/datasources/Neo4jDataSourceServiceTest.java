@@ -46,9 +46,6 @@ import org.geppetto.model.SimpleQuery;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 /**
  * @author matteocantarelli
  *
@@ -115,7 +112,7 @@ public class Neo4jDataSourceServiceTest
 		SimpleQuery query = GeppettoFactory.eINSTANCE.createSimpleQuery();
 		//Bad query //TODO HANDLE
 		//query.setQuery("MATCH (n:Class) WHERE n.short_form='$ID' RETURN n.label, n.short_form, n.description, n.comment LIMIT 1;");
-		query.setQuery("MATCH (n:VFB:Class { short_form: '$ID' } ) RETURN n.label, n.short_form, n.description, n.description LIMIT 1;");
+		query.setQuery("MATCH (n:VFB:Class { short_form: '$ID' } ) RETURN n.label, n.short_form, n.description LIMIT 1;");
 		Map<String, Object> properties = new HashMap<String, Object>();
 		properties.put("ID", "FBbt_00100219"); //will be coming from the server
 		properties.put("QUERY", query);
