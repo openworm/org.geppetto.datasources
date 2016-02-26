@@ -32,19 +32,35 @@
  *******************************************************************************/
 package org.geppetto.datasources;
 
-import static org.junit.Assert.fail;
-
-import java.util.HashMap;
+import java.io.IOException;
 import java.util.Map;
 
-import org.geppetto.core.common.GeppettoHTTPClient;
-import org.geppetto.core.common.JSONUtility;
+import junit.framework.Assert;
+
+import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
+import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
+import org.emfjson.jackson.resource.JsonResourceFactory;
+import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.datasources.GeppettoDataSourceException;
-import org.geppetto.datasources.utils.VelocityUtils;
-import org.geppetto.model.GeppettoFactory;
-import org.geppetto.model.SimpleQuery;
-import org.junit.Before;
+import org.geppetto.core.manager.SharedLibraryManager;
+import org.geppetto.core.model.GeppettoModelAccess;
+import org.geppetto.core.model.GeppettoModelReader;
+import org.geppetto.core.model.GeppettoSerializer;
+import org.geppetto.core.services.registry.ApplicationListenerBean;
+import org.geppetto.model.GeppettoModel;
+import org.geppetto.model.GeppettoPackage;
+import org.geppetto.model.util.GeppettoVisitingException;
+import org.geppetto.model.variables.Variable;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.support.RootBeanDefinition;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.web.context.support.GenericWebApplicationContext;
 
 /**
  * @author matteocantarelli
@@ -56,72 +72,58 @@ public class Neo4jDataSourceServiceTest
 	/**
 	 * @throws java.lang.Exception
 	 */
-	@Before
-	public void setUp() throws Exception
+	@SuppressWarnings("deprecation")
+	@BeforeClass
+	public static void setUp() throws Exception
 	{
-	}
+		GenericWebApplicationContext context = new GenericWebApplicationContext();
+		BeanDefinition queryProcessorBeanDefinition = new RootBeanDefinition(TestAddTypeQueryProcessor.class);
+		context.registerBeanDefinition("vfbTypeQueryProcessor", queryProcessorBeanDefinition);
+		context.registerBeanDefinition("scopedTarget.vfbTypeQueryProcessor", queryProcessorBeanDefinition);
+		BeanDefinition queryProcessorImportTypesBeanDefinition = new RootBeanDefinition(TestAddImportTypesQueryProcessor.class);
+		context.registerBeanDefinition("vfbImportTypesQueryProcessor", queryProcessorImportTypesBeanDefinition);
+		context.registerBeanDefinition("scopedTarget.vfbImportTypesQueryProcessor", queryProcessorImportTypesBeanDefinition);
+		ContextRefreshedEvent event = new ContextRefreshedEvent(context);
+		ApplicationListenerBean listener = new ApplicationListenerBean();
+		listener.onApplicationEvent(event);
+		ApplicationContext retrievedContext = ApplicationListenerBean.getApplicationContext("vfbTypeQueryProcessor");
+		Assert.assertNotNull(retrievedContext.getBean("scopedTarget.vfbTypeQueryProcessor"));
+		retrievedContext = ApplicationListenerBean.getApplicationContext("vfbImportTypesQueryProcessor");
+		Assert.assertNotNull(retrievedContext.getBean("scopedTarget.vfbImportTypesQueryProcessor"));
 
-	/**
-	 * Test method for {@link org.geppetto.datasources.Neo4jDataSourceService#getNumberOfResults(org.geppetto.model.Query, org.geppetto.model.variables.Variable)}.
-	 */
-	@Test
-	public void testGetNumberOfResultsQueryVariable()
-	{
-		fail("Not yet implemented");
-	}
-
-	/**
-	 * Test method for {@link org.geppetto.datasources.Neo4jDataSourceService#getNumberOfResults(org.geppetto.model.Query, org.geppetto.model.variables.Variable, org.geppetto.model.QueryResults)}.
-	 */
-	@Test
-	public void testGetNumberOfResultsQueryVariableQueryResults()
-	{
-		fail("Not yet implemented");
-	}
-
-	/**
-	 * Test method for {@link org.geppetto.datasources.Neo4jDataSourceService#execute(org.geppetto.model.Query, org.geppetto.model.variables.Variable, org.geppetto.core.datasources.IQueryListener)}.
-	 */
-	@Test
-	public void testExecuteQueryVariableIQueryListener()
-	{
-		fail("Not yet implemented");
-	}
-
-	/**
-	 * Test method for
-	 * {@link org.geppetto.datasources.Neo4jDataSourceService#execute(org.geppetto.model.Query, org.geppetto.model.variables.Variable, org.geppetto.model.QueryResults, org.geppetto.core.datasources.IQueryListener)}
-	 * .
-	 */
-	@Test
-	public void testExecuteQueryVariableQueryResultsIQueryListener()
-	{
-		fail("Not yet implemented");
 	}
 
 	/**
 	 * Test method for {@link org.geppetto.datasources.Neo4jDataSourceService#fetchVariable(java.lang.String)}.
 	 * 
 	 * @throws GeppettoDataSourceException
+	 * @throws GeppettoInitializationException
+	 * @throws GeppettoVisitingException 
+	 * @throws IOException 
 	 */
 	@Test
-	public void testFetchVariable() throws GeppettoDataSourceException
+	public void testFetchVariable() throws GeppettoDataSourceException, GeppettoInitializationException, GeppettoVisitingException, IOException
 	{
+		GeppettoModel model = GeppettoModelReader.readGeppettoModel(Neo4jDataSourceServiceTest.class.getClassLoader().getResource("GeppettoModelM1.xmi"));
+        model.getLibraries().add(SharedLibraryManager.getSharedCommonLibrary());
+        
+		GeppettoModelAccess geppettoModelAccess = new GeppettoModelAccess(model);
 		Neo4jDataSourceService dataSource = new Neo4jDataSourceService();
-
-		SimpleQuery query = GeppettoFactory.eINSTANCE.createSimpleQuery();
-		//Bad query //TODO HANDLE
-		//query.setQuery("MATCH (n:Class) WHERE n.short_form='$ID' RETURN n.label, n.short_form, n.description, n.comment LIMIT 1;");
-		query.setQuery("MATCH (n:VFB:Class { short_form: '$ID' } ) RETURN n.label, n.short_form, n.description LIMIT 1;");
-		Map<String, Object> properties = new HashMap<String, Object>();
-		properties.put("ID", "FBbt_00100219"); //will be coming from the server
-		properties.put("QUERY", query);
-		String queryString = VelocityUtils.processTemplate("/templates/neo4j/queryTemplate.vm", properties);
-		String response = GeppettoHTTPClient.doJSONPost("http://vfbdev.inf.ed.ac.uk/neo4jdb/data/transaction", queryString);
-
-		Map<String, Object> responseMap = JSONUtility.getAsMap(response);
+		dataSource.initialize(model.getDataSources().get(0), geppettoModelAccess);
+		Variable v = dataSource.fetchVariable("FBbt_00100219");
 		
-		System.out.println(response);
+		// Initialize the factory and the resource set
+		GeppettoPackage.eINSTANCE.eClass();
+		Resource.Factory.Registry reg = Resource.Factory.Registry.INSTANCE;
+		Map<String, Object> m = reg.getExtensionToFactoryMap();
+		m.put("xmi", new XMIResourceFactoryImpl()); // sets the factory for the XMI typ
+		ResourceSet resSet = new ResourceSetImpl();
+
+		// How to save to JSON
+		Resource resource = resSet.createResource(URI.createURI("./src/test/resources/fetchedVariable.xmi"));
+		resource.getContents().add(v);
+		resource.save(null);
+
 	}
 
 }

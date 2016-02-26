@@ -1,7 +1,7 @@
 {  
   "statements":[  
     {  
-      "statement":"$QUERY.query",
+      "statement":"$QUERY",
       "resultDataContents":[  
         "row",
         "graph"
