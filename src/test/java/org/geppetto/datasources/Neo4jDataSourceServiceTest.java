@@ -33,16 +33,9 @@
 package org.geppetto.datasources;
 
 import java.io.IOException;
-import java.util.Map;
 
 import junit.framework.Assert;
 
-import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.ecore.resource.ResourceSet;
-import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
-import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
-import org.emfjson.jackson.resource.JsonResourceFactory;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.datasources.GeppettoDataSourceException;
 import org.geppetto.core.manager.SharedLibraryManager;
@@ -51,9 +44,7 @@ import org.geppetto.core.model.GeppettoModelReader;
 import org.geppetto.core.model.GeppettoSerializer;
 import org.geppetto.core.services.registry.ApplicationListenerBean;
 import org.geppetto.model.GeppettoModel;
-import org.geppetto.model.GeppettoPackage;
 import org.geppetto.model.util.GeppettoVisitingException;
-import org.geppetto.model.variables.Variable;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -110,19 +101,26 @@ public class Neo4jDataSourceServiceTest
 		GeppettoModelAccess geppettoModelAccess = new GeppettoModelAccess(model);
 		Neo4jDataSourceService dataSource = new Neo4jDataSourceService();
 		dataSource.initialize(model.getDataSources().get(0), geppettoModelAccess);
-		Variable v = dataSource.fetchVariable("FBbt_00100219");
 		
-		// Initialize the factory and the resource set
-		GeppettoPackage.eINSTANCE.eClass();
-		Resource.Factory.Registry reg = Resource.Factory.Registry.INSTANCE;
-		Map<String, Object> m = reg.getExtensionToFactoryMap();
-		m.put("xmi", new XMIResourceFactoryImpl()); // sets the factory for the XMI typ
-		ResourceSet resSet = new ResourceSetImpl();
-
-		// How to save to JSON
-		Resource resource = resSet.createResource(URI.createURI("./src/test/resources/fetchedVariable.xmi"));
-		resource.getContents().add(v);
-		resource.save(null);
+		System.out.println(GeppettoSerializer.serializeToJSON(model, true));
+		
+		dataSource.fetchVariable("FBbt_00100219");
+		
+//		// Initialize the factory and the resource set
+//		GeppettoPackage.eINSTANCE.eClass();
+//		Resource.Factory.Registry reg = Resource.Factory.Registry.INSTANCE;
+//		Map<String, Object> m = reg.getExtensionToFactoryMap();
+//		m.put("xmi", new XMIResourceFactoryImpl()); // sets the factory for the XMI type
+//		ResourceSet resSet = new ResourceSetImpl();
+//
+//		Resource resource = resSet.createResource(URI.createURI("./src/test/resources/fetchedVariable.xmi"));
+//		resource.getContents().add(v);
+//		resource.save(null);
+		
+		
+		
+		System.out.println(GeppettoSerializer.serializeToJSON(model, true));
+		System.out.println(GeppettoSerializer.serializeToJSON(model, true));
 
 	}
 

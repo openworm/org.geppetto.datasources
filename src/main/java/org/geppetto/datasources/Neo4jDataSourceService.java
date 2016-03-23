@@ -121,11 +121,11 @@ public class Neo4jDataSourceService extends ADataSourceService implements IDataS
 	 * @see org.geppetto.core.model.IDataSource#fetchVariable(java.lang.String)
 	 */
 	@Override
-	public Variable fetchVariable(String variableId) throws GeppettoDataSourceException
+	public void fetchVariable(String variableId) throws GeppettoDataSourceException
 	{
 		Variable fetchedVariable = VariablesFactory.eINSTANCE.createVariable();
 		fetchedVariable.setId(variableId);
-
+		getGeppettoModelAccess().addVariable(fetchedVariable);
 		Query fetchVariableQuery = getConfiguration().getFetchVariableQuery();
 		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(getTemplate(), fetchedVariable, getGeppettoModelAccess());
 		try
@@ -137,8 +137,6 @@ public class Neo4jDataSourceService extends ADataSourceService implements IDataS
 		{
 			throw new GeppettoDataSourceException(e);
 		}
-
-		return fetchedVariable;
 	}
 
 }

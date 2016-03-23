@@ -38,6 +38,7 @@ import org.geppetto.core.features.IFeature;
 import org.geppetto.core.model.GeppettoModelAccess;
 import org.geppetto.core.services.GeppettoFeature;
 import org.geppetto.core.services.registry.ServicesRegistry;
+import org.geppetto.model.GeppettoModel;
 import org.geppetto.model.ProcessQuery;
 import org.geppetto.model.QueryResults;
 import org.geppetto.model.types.CompositeType;
@@ -72,20 +73,23 @@ public class TestAddImportTypesQueryProcessor implements IQueryProcessor
 			// TODO check if the results have import types
 			// TODO create import types
 			Variable metaDataVar = VariablesFactory.eINSTANCE.createVariable();
+			metaDataVar.setId("metaDataVar");
 			CompositeType metaData = TypesFactory.eINSTANCE.createCompositeType();
-			metaDataVar.getAnonymousTypes().add(metaData);
+			metaDataVar.getTypes().add(metaData);
 			type.setId("metadata");
 			Variable description = VariablesFactory.eINSTANCE.createVariable();
 			description.setId("description");
 			description.getTypes().add(metaData);
 			metaData.getVariables().add(description);
-			Type textType = geppettoModelAccess.getType(TypesPackage.Literals.TEXT_TYPE);
-
 			Text descriptionValue = ValuesFactory.eINSTANCE.createText();
 			descriptionValue.setText(results.getResults().get(0).getValues().get(2));
+			
+			Type textType = geppettoModelAccess.getType(TypesPackage.Literals.TEXT_TYPE);
 			description.getInitialValues().put(textType, descriptionValue);
 			
 			type.getVariables().add(metaDataVar);
+			geppettoModelAccess.addTypeToLibrary(metaData, ((GeppettoModel) variable.eContainer()).getLibraries().get(0));
+			int a;
 		}
 		catch(GeppettoVisitingException e)
 		{
