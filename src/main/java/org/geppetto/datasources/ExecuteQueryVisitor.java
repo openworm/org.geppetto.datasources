@@ -53,7 +53,6 @@ import org.geppetto.model.Query;
 import org.geppetto.model.QueryResult;
 import org.geppetto.model.QueryResults;
 import org.geppetto.model.SimpleQuery;
-import org.geppetto.model.types.Type;
 import org.geppetto.model.util.GeppettoSwitch;
 import org.geppetto.model.util.GeppettoVisitingException;
 import org.geppetto.model.variables.Variable;
@@ -167,16 +166,28 @@ public class ExecuteQueryVisitor extends GeppettoSwitch<Object>
 		}
 		else
 		{
-			//This is neo4j specific
-			//TODO Build neo4j object
+			// This is neo4j specific
+			// TODO Build neo4j object
 			Map<String, Object> responseMap = JSONUtility.getAsMap(response);
-			QueryResult result=GeppettoFactory.eINSTANCE.createQueryResult();
-			Map<String, Object>  data = (Map<String, Object>) ((List)((Map<String, Object>)((List)responseMap.get("results")).get(0)).get("data")).get(0);
-			List<Object> row=(List<Object>) data.get("row");
-			result.getValues().add((String) row.get(0));// name
-			result.getValues().add((String) row.get(1));//id
-			result.getValues().add((String)((List<Object>) row.get(2)).get(0));//description
-			results.getResults().add(result);
+			QueryResult result = GeppettoFactory.eINSTANCE.createQueryResult();
+
+			List<String> headers = (List<String>) ((List) ((Map<String, Object>) ((List) responseMap.get("results")).get(0)).get("columns"));
+
+			results.getHeader().clear();
+			results.getHeader().addAll(headers);
+
+			results.getResults().clear();
+			List<Map<String, Object>> data = (List<Map<String, Object>>) ((List) ((Map<String, Object>) ((List) responseMap.get("results")).get(0)).get("data"));
+			for(Map<String, Object> rowObject : data)
+			{
+				QueryResult resultRow = GeppettoFactory.eINSTANCE.createQueryResult();
+				List<Object> row = (List<Object>) rowObject.get("row");
+				for(Object value : row)
+				{
+					resultRow.getValues().add(value);
+				}
+				results.getResults().add(resultRow);
+			}
 		}
 
 	}
