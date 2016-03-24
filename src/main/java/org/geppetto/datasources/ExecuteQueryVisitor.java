@@ -64,6 +64,8 @@ import org.geppetto.model.variables.Variable;
 public class ExecuteQueryVisitor extends GeppettoSwitch<Object>
 {
 
+	private DataSource dataSource = null;
+
 	private boolean count; // true if we want to execute a count
 
 	private QueryResults results = null;
@@ -77,18 +79,19 @@ public class ExecuteQueryVisitor extends GeppettoSwitch<Object>
 	/**
 	 * 
 	 */
-	public ExecuteQueryVisitor(String dataSourceTemplate, Variable variable, GeppettoModelAccess geppettoModelAccess)
+	public ExecuteQueryVisitor(DataSource dataSource, String dataSourceTemplate, Variable variable, GeppettoModelAccess geppettoModelAccess)
 	{
-		this(dataSourceTemplate, variable, geppettoModelAccess, false);
+		this(dataSource, dataSourceTemplate, variable, geppettoModelAccess, false);
 	}
 
 	/**
 	 * @param variable
 	 * @param count
 	 */
-	public ExecuteQueryVisitor(String dataSourceTemplate, Variable variable, GeppettoModelAccess geppettoModelAccess, boolean count)
+	public ExecuteQueryVisitor(DataSource dataSource, String dataSourceTemplate, Variable variable, GeppettoModelAccess geppettoModelAccess, boolean count)
 	{
 		super();
+		this.dataSource = dataSource;
 		this.geppettoModelAccess = geppettoModelAccess;
 		this.dataSourceTemplate = dataSourceTemplate;
 		this.variable = variable;
@@ -107,7 +110,7 @@ public class ExecuteQueryVisitor extends GeppettoSwitch<Object>
 		try
 		{
 			IQueryProcessor queryProcessor = (IQueryProcessor) ServiceCreator.getNewServiceInstance(query.getQueryProcessorId());
-			this.results = queryProcessor.process(query, getVariable(), getResults(), geppettoModelAccess);
+			this.results = queryProcessor.process(query, dataSource, getVariable(), getResults(), geppettoModelAccess);
 		}
 		catch(GeppettoInitializationException e)
 		{

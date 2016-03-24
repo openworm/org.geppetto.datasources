@@ -32,16 +32,22 @@
  *******************************************************************************/
 package org.geppetto.datasources;
 
+import java.util.List;
+
 import org.geppetto.core.datasources.GeppettoDataSourceException;
 import org.geppetto.core.datasources.IQueryProcessor;
 import org.geppetto.core.features.IFeature;
 import org.geppetto.core.model.GeppettoModelAccess;
 import org.geppetto.core.services.GeppettoFeature;
 import org.geppetto.core.services.registry.ServicesRegistry;
+import org.geppetto.model.DataSource;
+import org.geppetto.model.GeppettoLibrary;
 import org.geppetto.model.GeppettoPackage;
 import org.geppetto.model.ProcessQuery;
 import org.geppetto.model.QueryResults;
 import org.geppetto.model.types.CompositeType;
+import org.geppetto.model.types.SimpleType;
+import org.geppetto.model.types.Type;
 import org.geppetto.model.types.TypesFactory;
 import org.geppetto.model.variables.Variable;
 import org.geppetto.model.variables.VariablesFactory;
@@ -60,12 +66,26 @@ public class TestAddTypeQueryProcessor implements IQueryProcessor
 	 * @see org.geppetto.core.datasources.IQueryProcessor#process(org.geppetto.model.ProcessQuery, org.geppetto.model.variables.Variable, org.geppetto.model.QueryResults)
 	 */
 	@Override
-	public QueryResults process(ProcessQuery query, Variable variable, QueryResults results, GeppettoModelAccess geppettoModelAccess) throws GeppettoDataSourceException
+	public QueryResults process(ProcessQuery query, DataSource dataSource, Variable variable, QueryResults results, GeppettoModelAccess geppettoModelAccess) throws GeppettoDataSourceException
 	{
 		geppettoModelAccess.setObjectAttribute(variable, GeppettoPackage.Literals.NODE__NAME, results.getValue("name", 0));
 		CompositeType type = TypesFactory.eINSTANCE.createCompositeType();
 		type.setId(variable.getId());
 		variable.getAnonymousTypes().add(type);
+
+		// add supertypes
+
+		List<String> supertypes = (List<String>) results.getValue("supertypes", 0);
+
+		List<GeppettoLibrary> dependenciesLibrary = dataSource.getDependenciesLibrary();
+
+		for(String supertype : supertypes)
+		{
+			if(!supertype.startsWith("_"))
+			{ // ignore supertypes starting with _
+				type.getSuperType().add(geppettoModelAccess.getOrCreateSimpleType(supertype, dependenciesLibrary));
+			}
+		}
 		return results;
 	}
 
