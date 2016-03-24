@@ -73,8 +73,7 @@ public class TestAddImportTypesQueryProcessor implements IQueryProcessor
 		try
 		{
 			CompositeType type = (CompositeType) variable.getAnonymousTypes().get(0);
-			// TODO check if the results have import types
-			// TODO create import types
+			
 			Variable metaDataVar = VariablesFactory.eINSTANCE.createVariable();
 			metaDataVar.setId("metaDataVar");
 			CompositeType metaData = TypesFactory.eINSTANCE.createCompositeType();
@@ -102,6 +101,7 @@ public class TestAddImportTypesQueryProcessor implements IQueryProcessor
 			comment.getInitialValues().put(textType, commentValue);
 
 //			import supertypes
+			// TODO check if the import types exist
 			List<String> supertypes = (List<String>) results.getValue("supertypes", 0);
 			Variable supertypeVar = VariablesFactory.eINSTANCE.createVariable();
 			SimpleType supertypeData = TypesFactory.eINSTANCE.createSimpleType();
