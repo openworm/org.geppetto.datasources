@@ -171,6 +171,7 @@ public class ExecuteQueryVisitor extends GeppettoSwitch<Object>
 			//TODO Build neo4j object
 			Map<String, Object> responseMap = JSONUtility.getAsMap(response);
 			QueryResult result=GeppettoFactory.eINSTANCE.createQueryResult();
+			
 			Map<String, Object>  data = (Map<String, Object>) ((List)((Map<String, Object>)((List)responseMap.get("results")).get(0)).get("data")).get(0);
 			List<Object> row=(List<Object>) data.get("row");
 			result.getValues().add((String) row.get(0));// name

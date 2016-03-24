@@ -38,11 +38,14 @@ import org.geppetto.core.features.IFeature;
 import org.geppetto.core.model.GeppettoModelAccess;
 import org.geppetto.core.services.GeppettoFeature;
 import org.geppetto.core.services.registry.ServicesRegistry;
+import org.geppetto.model.GeppettoPackage;
 import org.geppetto.model.ProcessQuery;
 import org.geppetto.model.QueryResults;
 import org.geppetto.model.types.CompositeType;
 import org.geppetto.model.types.TypesFactory;
 import org.geppetto.model.variables.Variable;
+import org.geppetto.model.variables.VariablesFactory;
+import org.geppetto.model.variables.VariablesPackage;
 
 /**
  * @author matteocantarelli
@@ -51,13 +54,16 @@ import org.geppetto.model.variables.Variable;
 public class TestAddTypeQueryProcessor implements IQueryProcessor
 {
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.geppetto.core.datasources.IQueryProcessor#process(org.geppetto.model.ProcessQuery, org.geppetto.model.variables.Variable, org.geppetto.model.QueryResults)
 	 */
 	@Override
 	public QueryResults process(ProcessQuery query, Variable variable, QueryResults results, GeppettoModelAccess geppettoModelAccess) throws GeppettoDataSourceException
 	{
-		CompositeType type=TypesFactory.eINSTANCE.createCompositeType();
+		geppettoModelAccess.setObjectAttribute(variable, GeppettoPackage.Literals.NODE__NAME, "New name");
+		CompositeType type = TypesFactory.eINSTANCE.createCompositeType();
 		type.setId(variable.getId());
 		variable.getAnonymousTypes().add(type);
 		return results;

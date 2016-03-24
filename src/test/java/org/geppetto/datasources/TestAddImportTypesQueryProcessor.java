@@ -89,7 +89,6 @@ public class TestAddImportTypesQueryProcessor implements IQueryProcessor
 			
 			type.getVariables().add(metaDataVar);
 			geppettoModelAccess.addTypeToLibrary(metaData, ((GeppettoModel) variable.eContainer()).getLibraries().get(0));
-			int a;
 		}
 		catch(GeppettoVisitingException e)
 		{

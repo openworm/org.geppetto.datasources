@@ -75,7 +75,7 @@ public class VelocityUtilsTest
 		query.setQuery("MATCH (n:Class)<-[:SUBCLASSOF*]-(:Class)<-[:INSTANCEOF]-(i) WHERE n.short_form='$ID' RETURN n AS columnName limit 5;");
 		Map<String, Object> properties = new HashMap<String, Object>();
 		properties.put("ID", "FBbt_00100219");
-		properties.put("QUERY", query);
+		properties.put("QUERY", query.getQuery());
 		String queryString = VelocityUtils.processTemplate("/templates/neo4j/queryTemplate.vm", properties);
 		InputStream in = VelocityUtilsTest.class.getClassLoader().getResourceAsStream("expectedQueryTemplateResultTest.json");
 		String expected = GeppettoCommonUtils.readString(in);
