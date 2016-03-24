@@ -62,7 +62,7 @@ public class TestAddTypeQueryProcessor implements IQueryProcessor
 	@Override
 	public QueryResults process(ProcessQuery query, Variable variable, QueryResults results, GeppettoModelAccess geppettoModelAccess) throws GeppettoDataSourceException
 	{
-		geppettoModelAccess.setObjectAttribute(variable, GeppettoPackage.Literals.NODE__NAME, "New name");
+		geppettoModelAccess.setObjectAttribute(variable, GeppettoPackage.Literals.NODE__NAME, results.getValue("name", 0));
 		CompositeType type = TypesFactory.eINSTANCE.createCompositeType();
 		type.setId(variable.getId());
 		variable.getAnonymousTypes().add(type);
