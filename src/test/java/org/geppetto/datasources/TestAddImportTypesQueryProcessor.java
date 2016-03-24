@@ -77,19 +77,29 @@ public class TestAddImportTypesQueryProcessor implements IQueryProcessor
 			CompositeType metaData = TypesFactory.eINSTANCE.createCompositeType();
 			metaDataVar.getTypes().add(metaData);
 			type.setId("metadata");
+			
+//			set description:
 			Variable description = VariablesFactory.eINSTANCE.createVariable();
 			description.setId("description");
 			description.getTypes().add(metaData);
 			metaData.getVariables().add(description);
 			Text descriptionValue = ValuesFactory.eINSTANCE.createText();
 			descriptionValue.setText(results.getResults().get(0).getValues().get(2));
-			
 			Type textType = geppettoModelAccess.getType(TypesPackage.Literals.TEXT_TYPE);
 			description.getInitialValues().put(textType, descriptionValue);
+//			set comment:
+			Variable comment = VariablesFactory.eINSTANCE.createVariable();
+			comment.setId("comment");
+			comment.getTypes().add(metaData);
+			metaData.getVariables().add(comment);
+			Text commentValue = ValuesFactory.eINSTANCE.createText();
+			commentValue.setText(results.getResults().get(0).getValues().get(3));
+			textType = geppettoModelAccess.getType(TypesPackage.Literals.TEXT_TYPE);
+			comment.getInitialValues().put(textType, commentValue);
 			
 			type.getVariables().add(metaDataVar);
 			geppettoModelAccess.addTypeToLibrary(metaData, ((GeppettoModel) variable.eContainer()).getLibraries().get(0));
-			int a;
+			
 		}
 		catch(GeppettoVisitingException e)
 		{
