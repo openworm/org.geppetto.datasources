@@ -64,7 +64,7 @@ public class Neo4jDataSourceService extends ADataSourceService implements IDataS
 	public int getNumberOfResults(Query query, Variable variable) throws GeppettoDataSourceException
 	{
 		Query fetchVariableQuery = getConfiguration().getFetchVariableQuery();
-		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(getTemplate(), variable, getGeppettoModelAccess(), true);
+		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(this.getConfiguration(), getTemplate(), variable, getGeppettoModelAccess(), true);
 		try
 		{
 			GeppettoModelTraversal.apply(fetchVariableQuery, runQueryVisitor);
@@ -127,7 +127,7 @@ public class Neo4jDataSourceService extends ADataSourceService implements IDataS
 		fetchedVariable.setId(variableId);
 		getGeppettoModelAccess().addVariable(fetchedVariable);
 		Query fetchVariableQuery = getConfiguration().getFetchVariableQuery();
-		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(getTemplate(), fetchedVariable, getGeppettoModelAccess());
+		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(this.getConfiguration(), getTemplate(), fetchedVariable, getGeppettoModelAccess());
 		try
 		{
 			GeppettoModelTraversal.apply(fetchVariableQuery, runQueryVisitor);
