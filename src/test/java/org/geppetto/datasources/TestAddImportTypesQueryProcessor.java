@@ -44,6 +44,7 @@ import org.geppetto.model.GeppettoModel;
 import org.geppetto.model.ProcessQuery;
 import org.geppetto.model.QueryResults;
 import org.geppetto.model.types.CompositeType;
+import org.geppetto.model.types.SimpleType;
 import org.geppetto.model.types.Type;
 import org.geppetto.model.types.TypesFactory;
 import org.geppetto.model.types.TypesPackage;
@@ -72,8 +73,7 @@ public class TestAddImportTypesQueryProcessor implements IQueryProcessor
 		try
 		{
 			CompositeType type = (CompositeType) variable.getAnonymousTypes().get(0);
-			// TODO check if the results have import types
-			// TODO create import types
+			
 			Variable metaDataVar = VariablesFactory.eINSTANCE.createVariable();
 			metaDataVar.setId("metaDataVar");
 			CompositeType metaData = TypesFactory.eINSTANCE.createCompositeType();
@@ -100,6 +100,19 @@ public class TestAddImportTypesQueryProcessor implements IQueryProcessor
 			textType = geppettoModelAccess.getType(TypesPackage.Literals.TEXT_TYPE);
 			comment.getInitialValues().put(textType, commentValue);
 
+//			import supertypes
+			// TODO check if the import types exist
+			List<String> supertypes = (List<String>) results.getValue("supertypes", 0);
+			Variable supertypeVar = VariablesFactory.eINSTANCE.createVariable();
+			SimpleType supertypeData = TypesFactory.eINSTANCE.createSimpleType();
+			for (String supertype : supertypes) {
+			    if (!supertype.startsWith("_")){ // ignore supertypes starting with _
+			    	supertypeVar.setId(supertype+"Var");
+			    	supertypeVar.getTypes().add(supertypeData);
+					type.setId(supertype);
+			    }
+			}
+			
 			type.getVariables().add(metaDataVar);
 			geppettoModelAccess.addTypeToLibrary(metaData, ((GeppettoModel) variable.eContainer()).getLibraries().get(0));
 		}
