@@ -32,6 +32,8 @@
  *******************************************************************************/
 package org.geppetto.datasources;
 
+import java.util.List;
+
 import org.geppetto.core.datasources.GeppettoDataSourceException;
 import org.geppetto.core.datasources.IQueryProcessor;
 import org.geppetto.core.features.IFeature;
@@ -82,11 +84,11 @@ public class TestAddImportTypesQueryProcessor implements IQueryProcessor
 			description.getTypes().add(metaData);
 			metaData.getVariables().add(description);
 			Text descriptionValue = ValuesFactory.eINSTANCE.createText();
-			descriptionValue.setText(results.getResults().get(0).getValues().get(2));
-			
+			descriptionValue.setText((String) ((List<String>)results.getValue("n.description", 0)).get(0));
+
 			Type textType = geppettoModelAccess.getType(TypesPackage.Literals.TEXT_TYPE);
 			description.getInitialValues().put(textType, descriptionValue);
-			
+
 			type.getVariables().add(metaDataVar);
 			geppettoModelAccess.addTypeToLibrary(metaData, ((GeppettoModel) variable.eContainer()).getLibraries().get(0));
 		}
