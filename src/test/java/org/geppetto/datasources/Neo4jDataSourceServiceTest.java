@@ -120,7 +120,6 @@ public class Neo4jDataSourceServiceTest
 		
 		
 		System.out.println(GeppettoSerializer.serializeToJSON(model, true));
-		System.out.println(GeppettoSerializer.serializeToJSON(model, true));
 
 	}
 
