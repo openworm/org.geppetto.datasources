@@ -82,6 +82,8 @@ public class Neo4jDataSourceServiceTest
 		retrievedContext = ApplicationListenerBean.getApplicationContext("vfbImportTypesQueryProcessor");
 		Assert.assertNotNull(retrievedContext.getBean("scopedTarget.vfbImportTypesQueryProcessor"));
 
+		
+		
 	}
 
 	/**

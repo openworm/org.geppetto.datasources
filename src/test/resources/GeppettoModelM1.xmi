@@ -97,6 +97,11 @@
             type="//@libraries.3/@types.6"/>
       </queryChain>
       <queryChain
+          xsi:type="gep:ProcessQuery"
+          label="This processing step will populate a Variable with the synonyms and references resulting from the previous query"
+          description="This processing step will populate a Variable with the synonyms and references resulting from the previous query"
+          queryProcessorId="vfbImportTypesSynonymQueryProcessor"/>
+      <queryChain
           xsi:type="gep:SimpleQuery"
           label="Fetch 6 example individuals for classes"
           description="Fetch 6 example individuals"
