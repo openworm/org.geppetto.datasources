@@ -68,12 +68,19 @@ public class Neo4jDataSourceServiceTest
 	public static void setUp() throws Exception
 	{
 		GenericWebApplicationContext context = new GenericWebApplicationContext();
+		
 		BeanDefinition queryProcessorBeanDefinition = new RootBeanDefinition(TestAddTypeQueryProcessor.class);
 		context.registerBeanDefinition("vfbTypeQueryProcessor", queryProcessorBeanDefinition);
 		context.registerBeanDefinition("scopedTarget.vfbTypeQueryProcessor", queryProcessorBeanDefinition);
+		
 		BeanDefinition queryProcessorImportTypesBeanDefinition = new RootBeanDefinition(TestAddImportTypesQueryProcessor.class);
 		context.registerBeanDefinition("vfbImportTypesQueryProcessor", queryProcessorImportTypesBeanDefinition);
 		context.registerBeanDefinition("scopedTarget.vfbImportTypesQueryProcessor", queryProcessorImportTypesBeanDefinition);
+		
+		BeanDefinition queryProcessorImportTypesSynonymBeanDefinition = new RootBeanDefinition(TestAddImportTypesSynonymQueryProcessor.class);
+		context.registerBeanDefinition("vfbImportTypesSynonymQueryProcessor", queryProcessorImportTypesSynonymBeanDefinition);
+		context.registerBeanDefinition("scopedTarget.vfbImportTypesSynonymQueryProcessor", queryProcessorImportTypesSynonymBeanDefinition);
+		
 		ContextRefreshedEvent event = new ContextRefreshedEvent(context);
 		ApplicationListenerBean listener = new ApplicationListenerBean();
 		listener.onApplicationEvent(event);
@@ -81,8 +88,6 @@ public class Neo4jDataSourceServiceTest
 		Assert.assertNotNull(retrievedContext.getBean("scopedTarget.vfbTypeQueryProcessor"));
 		retrievedContext = ApplicationListenerBean.getApplicationContext("vfbImportTypesQueryProcessor");
 		Assert.assertNotNull(retrievedContext.getBean("scopedTarget.vfbImportTypesQueryProcessor"));
-
-		
 		
 	}
 
