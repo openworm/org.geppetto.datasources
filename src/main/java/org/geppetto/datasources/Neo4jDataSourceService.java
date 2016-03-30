@@ -33,6 +33,7 @@
 package org.geppetto.datasources;
 
 import org.geppetto.core.datasources.ADataSourceService;
+import org.geppetto.core.datasources.ExecuteQueryVisitor;
 import org.geppetto.core.datasources.GeppettoDataSourceException;
 import org.geppetto.core.datasources.IDataSourceService;
 import org.geppetto.core.datasources.IQueryListener;

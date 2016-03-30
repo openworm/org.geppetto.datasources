@@ -34,11 +34,10 @@
 			<version>${spring.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.servicemix.bundles</groupId>
-			<artifactId>org.apache.servicemix.bundles.velocity</artifactId>
-			<version>1.7_6</version>
+			<groupId>org.apache.log4j</groupId>
+			<artifactId>com.springsource.org.apache.log4j</artifactId>
+			<version>1.2.16</version>
 		</dependency>
-
 		<!-- test dependencies -->
 		<dependency>
 			<groupId>org.junit</groupId>

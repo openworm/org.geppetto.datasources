@@ -41,7 +41,7 @@ import junit.framework.Assert;
 
 import org.geppetto.core.common.GeppettoCommonUtils;
 import org.geppetto.core.datasources.GeppettoDataSourceException;
-import org.geppetto.datasources.utils.VelocityUtils;
+import org.geppetto.core.datasources.VelocityUtils;
 import org.geppetto.model.GeppettoFactory;
 import org.geppetto.model.SimpleQuery;
 import org.junit.Before;
@@ -63,7 +63,7 @@ public class VelocityUtilsTest
 	}
 
 	/**
-	 * Test method for {@link org.geppetto.datasources.utils.VelocityUtils#processTemplate(java.lang.String, java.util.Map)}.
+	 * Test method for {@link org.geppetto.core.datasources.VelocityUtils#processTemplate(java.lang.String, java.util.Map)}.
 	 * 
 	 * @throws GeppettoDataSourceException
 	 * @throws IOException
