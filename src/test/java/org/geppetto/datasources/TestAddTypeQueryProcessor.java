@@ -38,6 +38,7 @@ import org.geppetto.core.datasources.GeppettoDataSourceException;
 import org.geppetto.core.datasources.IQueryProcessor;
 import org.geppetto.core.features.IFeature;
 import org.geppetto.core.model.GeppettoModelAccess;
+import org.geppetto.core.model.GeppettoSerializer;
 import org.geppetto.core.services.GeppettoFeature;
 import org.geppetto.core.services.registry.ServicesRegistry;
 import org.geppetto.model.DataSource;
@@ -86,6 +87,7 @@ public class TestAddTypeQueryProcessor implements IQueryProcessor
 				type.getSuperType().add(geppettoModelAccess.getOrCreateSimpleType(supertype, dependenciesLibrary));
 			}
 		}
+		
 		return results;
 	}
 

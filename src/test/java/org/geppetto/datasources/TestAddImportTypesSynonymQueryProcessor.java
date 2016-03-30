@@ -57,10 +57,10 @@ import org.geppetto.model.variables.Variable;
 import org.geppetto.model.variables.VariablesFactory;
 
 /**
- * @author matteocantarelli
+ * @author robertcourt
  *
  */
-public class TestAddImportTypesQueryProcessor implements IQueryProcessor
+public class TestAddImportTypesSynonymQueryProcessor implements IQueryProcessor
 {
 
 	/*
@@ -75,7 +75,6 @@ public class TestAddImportTypesQueryProcessor implements IQueryProcessor
 		try
 		{
 			System.out.println(results);
-			
 			CompositeType type = (CompositeType) variable.getAnonymousTypes().get(0);
 			
 			Variable metaDataVar = VariablesFactory.eINSTANCE.createVariable();
