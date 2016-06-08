@@ -33,13 +33,16 @@
 package org.geppetto.datasources;
 
 import org.geppetto.core.datasources.ADataSourceService;
+import org.geppetto.core.datasources.ExecuteQueryVisitor;
 import org.geppetto.core.datasources.GeppettoDataSourceException;
 import org.geppetto.core.datasources.IDataSourceService;
 import org.geppetto.core.datasources.IQueryListener;
 import org.geppetto.model.Query;
 import org.geppetto.model.QueryResults;
-import org.geppetto.model.SimpleQuery;
+import org.geppetto.model.util.GeppettoModelTraversal;
+import org.geppetto.model.util.GeppettoVisitingException;
 import org.geppetto.model.variables.Variable;
+import org.geppetto.model.variables.VariablesFactory;
 
 /**
  * @author matteocantarelli
@@ -47,6 +50,11 @@ import org.geppetto.model.variables.Variable;
  */
 public class Neo4jDataSourceService extends ADataSourceService implements IDataSourceService
 {
+
+	public Neo4jDataSourceService()
+	{
+		super("/templates/neo4j/queryTemplate.vm");
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -56,12 +64,19 @@ public class Neo4jDataSourceService extends ADataSourceService implements IDataS
 	@Override
 	public int getNumberOfResults(Query query, Variable variable) throws GeppettoDataSourceException
 	{
-		int count = -1;
-		SimpleQuery simpleQuery = (SimpleQuery) query;
-		String queryURL = getQueryURL(getConfiguration().getUrl(), simpleQuery.getCountQuery());
-		String rawResults = execute(queryURL);
-		// TODO go from rawResults to actual count
-		return count;
+		Query fetchVariableQuery = getConfiguration().getFetchVariableQuery();
+		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(this.getConfiguration(), getTemplate(), variable, getGeppettoModelAccess(), true);
+		try
+		{
+			GeppettoModelTraversal.apply(fetchVariableQuery, runQueryVisitor);
+
+		}
+		catch(GeppettoVisitingException e)
+		{
+			throw new GeppettoDataSourceException(e);
+		}
+
+		return runQueryVisitor.getCount();
 	}
 
 	/*
@@ -107,10 +122,22 @@ public class Neo4jDataSourceService extends ADataSourceService implements IDataS
 	 * @see org.geppetto.core.model.IDataSource#fetchVariable(java.lang.String)
 	 */
 	@Override
-	public Variable fetchVariable(String variableId) throws GeppettoDataSourceException
+	public void fetchVariable(String variableId) throws GeppettoDataSourceException
 	{
-		// TODO Auto-generated method stub
-		return null;
+		Variable fetchedVariable = VariablesFactory.eINSTANCE.createVariable();
+		fetchedVariable.setId(variableId);
+		getGeppettoModelAccess().addVariable(fetchedVariable);
+		Query fetchVariableQuery = getConfiguration().getFetchVariableQuery();
+		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(this.getConfiguration(), getTemplate(), fetchedVariable, getGeppettoModelAccess());
+		try
+		{
+			GeppettoModelTraversal.apply(fetchVariableQuery, runQueryVisitor);
+
+		}
+		catch(GeppettoVisitingException e)
+		{
+			throw new GeppettoDataSourceException(e);
+		}
 	}
 
 }

@@ -12,7 +12,7 @@
 	</appender>
 
 	<!-- Application loggers -->
-	<logger name="org.geppetto.model">
+	<logger name="org.geppetto.datasources">
 		<level value="debug" />
 	</logger>
 
