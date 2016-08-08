@@ -48,12 +48,12 @@ import org.geppetto.model.variables.VariablesFactory;
  * @author matteocantarelli
  *
  */
-public class Neo4jDataSourceService extends ADataSourceService implements IDataSourceService
+public class AmberOWLDataSourceService extends ADataSourceService implements IDataSourceService
 {
 
-	public Neo4jDataSourceService()
+	public AmberOWLDataSourceService()
 	{
-		super("/templates/neo4j/queryTemplate.vm");
+		super("/templates/amberOWL/queryTemplate.vm");
 	}
 
 	/*
@@ -65,7 +65,7 @@ public class Neo4jDataSourceService extends ADataSourceService implements IDataS
 	public int getNumberOfResults(Query query, Variable variable) throws GeppettoDataSourceException
 	{
 		Query fetchVariableQuery = getConfiguration().getFetchVariableQuery();
-		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(this.getConfiguration(), getTemplate(), variable, getGeppettoModelAccess(), true, ConnectionType.POST);
+		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(this.getConfiguration(), getTemplate(), variable, getGeppettoModelAccess(), true, ConnectionType.GET);
 		try
 		{
 			GeppettoModelTraversal.apply(fetchVariableQuery, runQueryVisitor);
@@ -128,7 +128,7 @@ public class Neo4jDataSourceService extends ADataSourceService implements IDataS
 		fetchedVariable.setId(variableId);
 		getGeppettoModelAccess().addVariable(fetchedVariable);
 		Query fetchVariableQuery = getConfiguration().getFetchVariableQuery();
-		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(this.getConfiguration(), getTemplate(), fetchedVariable, getGeppettoModelAccess(), ConnectionType.POST);
+		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(this.getConfiguration(), getTemplate(), fetchedVariable, getGeppettoModelAccess(), ConnectionType.GET);
 		try
 		{
 			GeppettoModelTraversal.apply(fetchVariableQuery, runQueryVisitor);
