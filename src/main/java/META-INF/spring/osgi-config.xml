@@ -14,14 +14,14 @@
 	<osgi:service id="Neo4jDataSourceExporter" ref="neo4jDataSource"
 		interface="org.geppetto.core.datasources.IDataSourceService">
 	</osgi:service>
-	<bean id="neo4jDataSource" scope="prototype" class="org.geppetto.datasources.Neo4jDataSourceService">
+	<bean id="neo4jDataSource" scope="prototype" class="org.geppetto.datasources.neo4j.Neo4jDataSourceService">
 	<aop:scoped-proxy proxy-target-class="false"/>
 	</bean>
 	
-	<osgi:service id="AmberOWLDataSourceExporter" ref="amberOWLDataSource"
+	<osgi:service id="AberOWLDataSourceExporter" ref="aberOWLDataSource"
 		interface="org.geppetto.core.datasources.IDataSourceService">
 	</osgi:service>
-	<bean id="amberOWLDataSource" scope="prototype" class="org.geppetto.datasources.AmberOWLDataSourceService">
+	<bean id="aberOWLDataSource" scope="prototype" class="org.geppetto.datasources.aberowl.AberOWLDataSourceService">
 	<aop:scoped-proxy proxy-target-class="false"/>
 	</bean>
 	

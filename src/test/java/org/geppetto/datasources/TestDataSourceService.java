@@ -35,13 +35,13 @@ package org.geppetto.datasources;
 import org.geppetto.core.datasources.GeppettoDataSourceException;
 import org.geppetto.core.datasources.IDataSourceService;
 import org.geppetto.core.datasources.IQueryListener;
-import org.geppetto.model.DataSource;
-import org.geppetto.model.DataSourceLibraryConfiguration;
-import org.geppetto.model.GeppettoLibrary;
+import org.geppetto.datasources.ADataSourceService;
+import org.geppetto.datasources.ExecuteQueryVisitor;
+import org.geppetto.datasources.neo4j.Neo4jResponseProcessor;
 import org.geppetto.model.Query;
 import org.geppetto.model.QueryResults;
-import org.geppetto.model.types.ImportType;
-import org.geppetto.model.types.TypesFactory;
+import org.geppetto.model.util.GeppettoModelTraversal;
+import org.geppetto.model.util.GeppettoVisitingException;
 import org.geppetto.model.variables.Variable;
 import org.geppetto.model.variables.VariablesFactory;
 
@@ -49,10 +49,10 @@ import org.geppetto.model.variables.VariablesFactory;
  * @author matteocantarelli
  *
  */
-public class DummyDataSourceService extends ADataSourceService implements IDataSourceService
+public class TestDataSourceService extends ADataSourceService implements IDataSourceService
 {
 
-	public DummyDataSourceService()
+	public TestDataSourceService()
 	{
 		super("");
 	}
@@ -65,8 +65,19 @@ public class DummyDataSourceService extends ADataSourceService implements IDataS
 	@Override
 	public int getNumberOfResults(Query query, Variable variable) throws GeppettoDataSourceException
 	{
-		// TODO Auto-generated method stub
-		return 0;
+		Query fetchVariableQuery = getConfiguration().getFetchVariableQuery();
+		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(this.getConfiguration(), getTemplate(), variable, getGeppettoModelAccess(), true, ConnectionType.POST, new Neo4jResponseProcessor());
+		try
+		{
+			GeppettoModelTraversal.apply(fetchVariableQuery, runQueryVisitor);
+
+		}
+		catch(GeppettoVisitingException e)
+		{
+			throw new GeppettoDataSourceException(e);
+		}
+
+		return runQueryVisitor.getCount();
 	}
 
 	/*
@@ -117,29 +128,17 @@ public class DummyDataSourceService extends ADataSourceService implements IDataS
 		Variable fetchedVariable = VariablesFactory.eINSTANCE.createVariable();
 		fetchedVariable.setId(variableId);
 		getGeppettoModelAccess().addVariable(fetchedVariable);
-		ImportType importType = TypesFactory.eINSTANCE.createImportType();
-		importType.setId("Type"+variableId); //an SWC for instance
-		importType.setUrl(""); //an SWC for instance
-		fetchedVariable.getTypes().add(importType);
-		importType.setModelInterpreterId("swcModelInterpreter");
-		getGeppettoModelAccess().addTypeToLibrary(importType, getLibraryFor(getConfiguration(),"swc"));
-		
-	}
-	
-	/**
-	 * @param dataSource
-	 * @param format
-	 * @return
-	 */
-	private GeppettoLibrary getLibraryFor(DataSource dataSource, String format)
-	{
-		for(DataSourceLibraryConfiguration lc: dataSource.getLibraryConfigurations()){
-			if(lc.getFormat().equals(format))
-			{
-				return lc.getLibrary();
-			}
+		Query fetchVariableQuery = getConfiguration().getFetchVariableQuery();
+		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(this.getConfiguration(), getTemplate(), fetchedVariable, getGeppettoModelAccess(), ConnectionType.POST, new Neo4jResponseProcessor());
+		try
+		{
+			GeppettoModelTraversal.apply(fetchVariableQuery, runQueryVisitor);
+
 		}
-		return null;
+		catch(GeppettoVisitingException e)
+		{
+			throw new GeppettoDataSourceException(e);
+		}
 	}
 
 }

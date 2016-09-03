@@ -30,13 +30,13 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  *******************************************************************************/
-package org.geppetto.datasources;
+package org.geppetto.datasources.neo4j;
 
-import org.geppetto.core.datasources.ADataSourceService;
-import org.geppetto.core.datasources.ExecuteQueryVisitor;
 import org.geppetto.core.datasources.GeppettoDataSourceException;
 import org.geppetto.core.datasources.IDataSourceService;
 import org.geppetto.core.datasources.IQueryListener;
+import org.geppetto.datasources.ADataSourceService;
+import org.geppetto.datasources.ExecuteQueryVisitor;
 import org.geppetto.model.Query;
 import org.geppetto.model.QueryResults;
 import org.geppetto.model.util.GeppettoModelTraversal;
@@ -65,7 +65,8 @@ public class Neo4jDataSourceService extends ADataSourceService implements IDataS
 	public int getNumberOfResults(Query query, Variable variable) throws GeppettoDataSourceException
 	{
 		Query fetchVariableQuery = getConfiguration().getFetchVariableQuery();
-		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(this.getConfiguration(), getTemplate(), variable, getGeppettoModelAccess(), true, ConnectionType.POST);
+		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(this.getConfiguration(), getTemplate(), variable, getGeppettoModelAccess(), true, ConnectionType.POST,
+				new Neo4jResponseProcessor());
 		try
 		{
 			GeppettoModelTraversal.apply(fetchVariableQuery, runQueryVisitor);
@@ -128,7 +129,8 @@ public class Neo4jDataSourceService extends ADataSourceService implements IDataS
 		fetchedVariable.setId(variableId);
 		getGeppettoModelAccess().addVariable(fetchedVariable);
 		Query fetchVariableQuery = getConfiguration().getFetchVariableQuery();
-		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(this.getConfiguration(), getTemplate(), fetchedVariable, getGeppettoModelAccess(), ConnectionType.POST);
+		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(this.getConfiguration(), getTemplate(), fetchedVariable, getGeppettoModelAccess(), ConnectionType.POST,
+				new Neo4jResponseProcessor());
 		try
 		{
 			GeppettoModelTraversal.apply(fetchVariableQuery, runQueryVisitor);
