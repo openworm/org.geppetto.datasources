@@ -34,7 +34,9 @@ package org.geppetto.datasources;
 
 import java.util.Map;
 
-import org.geppetto.model.QueryResults;
+import org.geppetto.model.datasources.QueryResults;
+
+
 
 /**
  * @author matteocantarelli

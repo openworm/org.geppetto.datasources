@@ -32,7 +32,9 @@
  *******************************************************************************/
 package org.geppetto.datasources;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.emf.ecore.EObject;
@@ -46,20 +48,24 @@ import org.geppetto.core.datasources.VelocityUtils;
 import org.geppetto.core.model.GeppettoModelAccess;
 import org.geppetto.core.services.ServiceCreator;
 import org.geppetto.datasources.ADataSourceService.ConnectionType;
-import org.geppetto.model.DataSource;
-import org.geppetto.model.GeppettoFactory;
-import org.geppetto.model.ProcessQuery;
-import org.geppetto.model.Query;
-import org.geppetto.model.QueryResults;
-import org.geppetto.model.SimpleQuery;
-import org.geppetto.model.util.GeppettoSwitch;
+import org.geppetto.model.datasources.AQueryResult;
+import org.geppetto.model.datasources.CompoundRefQuery;
+import org.geppetto.model.datasources.DataSource;
+import org.geppetto.model.datasources.DatasourcesFactory;
+import org.geppetto.model.datasources.ProcessQuery;
+import org.geppetto.model.datasources.Query;
+import org.geppetto.model.datasources.QueryResult;
+import org.geppetto.model.datasources.QueryResults;
+import org.geppetto.model.datasources.SerializableQueryResult;
+import org.geppetto.model.datasources.SimpleQuery;
+import org.geppetto.model.datasources.util.DatasourcesSwitch;
 import org.geppetto.model.util.GeppettoVisitingException;
 import org.geppetto.model.variables.Variable;
 
 /**
  * @author matteocantarelli Matteo TODO: I really want to move this to the datasource bundle...
  */
-public class ExecuteQueryVisitor extends GeppettoSwitch<Object>
+public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 {
 
 	private DataSource dataSource = null;
@@ -77,6 +83,8 @@ public class ExecuteQueryVisitor extends GeppettoSwitch<Object>
 	private ConnectionType connectionType;
 
 	private IQueryResponseProcessor queryResponseProcessor;
+
+	private Map<String, Object> processingOutputMap = new HashMap<String, Object>();
 
 	/**
 	 * 
@@ -104,7 +112,7 @@ public class ExecuteQueryVisitor extends GeppettoSwitch<Object>
 		this.count = count;
 		this.connectionType = connectionType;
 		this.queryResponseProcessor = queryResponseProcessor;
-		results = GeppettoFactory.eINSTANCE.createQueryResults();
+		results = DatasourcesFactory.eINSTANCE.createQueryResults();
 	}
 
 	/*
@@ -121,6 +129,7 @@ public class ExecuteQueryVisitor extends GeppettoSwitch<Object>
 			{
 				IQueryProcessor queryProcessor = (IQueryProcessor) ServiceCreator.getNewServiceInstance(query.getQueryProcessorId());
 				this.results = queryProcessor.process(query, dataSource, getVariable(), getResults(), geppettoModelAccess);
+				this.processingOutputMap = queryProcessor.getProcessingOutputMap();
 			}
 			catch(GeppettoInitializationException e)
 			{
@@ -132,6 +141,21 @@ public class ExecuteQueryVisitor extends GeppettoSwitch<Object>
 			}
 		}
 		return super.caseProcessQuery(query);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.geppetto.model.datasources.util.DatasourcesSwitch#caseCompoundRefQuery(org.geppetto.model.datasources.CompoundRefQuery)
+	 */
+	@Override
+	public Object caseCompoundRefQuery(CompoundRefQuery object)
+	{
+		for(Query query : object.getQueryChain())
+		{
+			this.doSwitch(query);
+		}
+		return super.caseCompoundRefQuery(object);
 	}
 
 	/*
@@ -153,6 +177,11 @@ public class ExecuteQueryVisitor extends GeppettoSwitch<Object>
 				Map<String, Object> properties = new HashMap<String, Object>();
 				properties.put("ID", getVariable().getId());
 				properties.put("QUERY", queryString);
+
+				if(processingOutputMap != null)
+				{
+					properties.putAll(processingOutputMap);
+				}
 
 				String processedQueryString = VelocityUtils.processTemplate(dataSourceTemplate, properties);
 
@@ -190,8 +219,43 @@ public class ExecuteQueryVisitor extends GeppettoSwitch<Object>
 		else
 		{
 			Map<String, Object> responseMap = JSONUtility.getAsMap(response);
-			results = queryResponseProcessor.processResponse(responseMap);
+			mergeResults(queryResponseProcessor.processResponse(responseMap));
 		}
+
+	}
+
+	/**
+	 * @param processResponse
+	 */
+	private void mergeResults(QueryResults processResponse)
+	{
+		results = processResponse;
+//		if(results != null)
+//		{
+//			
+//
+//			processedResults.getHeader().add("ID");
+//			processedResults.getHeader().add("Name");
+//			processedResults.getHeader().add("Definition");
+//
+//			List<String> ids=new ArrayList<String>();
+//			for(AQueryResult result : results.getResults())
+//			{
+//				SerializableQueryResult processedResult = DatasourcesFactory.eINSTANCE.createSerializableQueryResult();
+//				processedResult.getValues().add(((QueryResult) result).getValues().get(idIndex).toString());
+//				String id=((List<String>) ((QueryResult) result).getValues().get(nameIndex)).get(0);
+//				processedResult.getValues().add(id);
+//				ids.add(id);
+//				processedResult.getValues().add(((QueryResult) result).getValues().get(descirptionIndex).toString());
+//				processedResults.getResults().add(processedResult);
+//			}
+//			
+//			processingOutputMap.put("ARRAY_ID_RESULTS",ids);
+//		}
+//		else
+//		{
+//			results = processResponse;
+//		}
 
 	}
 

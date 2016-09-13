@@ -8,9 +8,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.geppetto.datasources.IQueryResponseProcessor;
-import org.geppetto.model.GeppettoFactory;
-import org.geppetto.model.QueryResult;
-import org.geppetto.model.QueryResults;
+import org.geppetto.model.datasources.DatasourcesFactory;
+import org.geppetto.model.datasources.QueryResult;
+import org.geppetto.model.datasources.QueryResults;
+
 
 /**
  * @author matteocantarelli
@@ -27,7 +28,7 @@ public class AberOWLResponseProcessor implements IQueryResponseProcessor
 	@Override
 	public QueryResults processResponse(Map<String, Object> response)
 	{
-		QueryResults results = GeppettoFactory.eINSTANCE.createQueryResults();
+		QueryResults results = DatasourcesFactory.eINSTANCE.createQueryResults();
 		List<String> headers = new ArrayList<String>();
 
 		List<Map<String, Object>> data = (List<Map<String, Object>>) response.get("result");
@@ -49,7 +50,7 @@ public class AberOWLResponseProcessor implements IQueryResponseProcessor
 		//STEP 2 - Add all the values at the right place
 		for(Map<String, Object> rowObject : data)
 		{
-			QueryResult resultRow = GeppettoFactory.eINSTANCE.createQueryResult();
+			QueryResult resultRow = DatasourcesFactory.eINSTANCE.createQueryResult();
 			for(String column : headers)
 			{
 				if(rowObject.containsKey(column))

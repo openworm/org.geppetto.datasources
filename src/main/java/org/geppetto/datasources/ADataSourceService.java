@@ -39,8 +39,8 @@ import org.geppetto.core.datasources.IDataSourceService;
 import org.geppetto.core.datasources.QueryChecker;
 import org.geppetto.core.model.GeppettoModelAccess;
 import org.geppetto.core.services.AService;
-import org.geppetto.model.DataSource;
-import org.geppetto.model.Query;
+import org.geppetto.model.datasources.DataSource;
+import org.geppetto.model.datasources.Query;
 import org.geppetto.model.variables.Variable;
 
 /**

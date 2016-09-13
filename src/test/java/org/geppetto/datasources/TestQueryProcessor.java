@@ -34,14 +34,13 @@ package org.geppetto.datasources;
 
 
 import org.geppetto.core.datasources.GeppettoDataSourceException;
-import org.geppetto.core.datasources.IQueryProcessor;
 import org.geppetto.core.features.IFeature;
 import org.geppetto.core.model.GeppettoModelAccess;
 import org.geppetto.core.services.GeppettoFeature;
 import org.geppetto.core.services.registry.ServicesRegistry;
-import org.geppetto.model.DataSource;
-import org.geppetto.model.ProcessQuery;
-import org.geppetto.model.QueryResults;
+import org.geppetto.model.datasources.DataSource;
+import org.geppetto.model.datasources.ProcessQuery;
+import org.geppetto.model.datasources.QueryResults;
 import org.geppetto.model.types.CompositeType;
 import org.geppetto.model.types.ImportType;
 import org.geppetto.model.types.TypesFactory;
@@ -52,7 +51,7 @@ import org.geppetto.model.variables.VariablesFactory;
  * @author matteocantarelli
  *
  */
-public class TestQueryProcessor implements IQueryProcessor
+public class TestQueryProcessor extends AQueryProcessor
 {
 
 	/*
