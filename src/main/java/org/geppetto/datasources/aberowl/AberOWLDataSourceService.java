@@ -33,10 +33,10 @@
 package org.geppetto.datasources.aberowl;
 
 import org.geppetto.core.datasources.GeppettoDataSourceException;
-import org.geppetto.core.datasources.IDataSourceService;
 import org.geppetto.core.datasources.IQueryListener;
 import org.geppetto.datasources.ADataSourceService;
 import org.geppetto.datasources.ExecuteQueryVisitor;
+import org.geppetto.datasources.IQueryResponseProcessor;
 import org.geppetto.model.datasources.Query;
 import org.geppetto.model.datasources.QueryResults;
 import org.geppetto.model.util.GeppettoModelTraversal;
@@ -48,7 +48,7 @@ import org.geppetto.model.variables.VariablesFactory;
  * @author matteocantarelli
  *
  */
-public class AberOWLDataSourceService extends ADataSourceService implements IDataSourceService
+public class AberOWLDataSourceService extends ADataSourceService
 {
 
 	public AberOWLDataSourceService()
@@ -56,97 +56,31 @@ public class AberOWLDataSourceService extends ADataSourceService implements IDat
 		super("/templates/aberOWL/queryTemplate.vm");
 	}
 
+
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.geppetto.core.model.QueryProvider#getNumberOfResults(org.geppetto.core.model.Query, org.geppetto.model.variables.Variable)
+	 * @see org.geppetto.datasources.ADataSourceService#getConnectionType()
 	 */
 	@Override
-	public int getNumberOfResults(Query query, Variable variable) throws GeppettoDataSourceException
+	public ConnectionType getConnectionType()
 	{
-		Query fetchVariableQuery = getConfiguration().getFetchVariableQuery();
-		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(this.getConfiguration(), getTemplate(), variable, getGeppettoModelAccess(), true, ConnectionType.GET, new AberOWLResponseProcessor());
-		try
-		{
-			GeppettoModelTraversal.apply(fetchVariableQuery, runQueryVisitor);
-
-		}
-		catch(GeppettoVisitingException e)
-		{
-			throw new GeppettoDataSourceException(e);
-		}
-
-		return runQueryVisitor.getCount();
+		return ConnectionType.GET;
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.geppetto.core.model.QueryProvider#getNumberOfResults(org.geppetto.core.model.Query, org.geppetto.model.variables.Variable, org.geppetto.core.model.QueryResults)
+	 * @see org.geppetto.datasources.ADataSourceService#getQueryResponseProcessor()
 	 */
 	@Override
-	public int getNumberOfResults(Query query, Variable variable, QueryResults results) throws GeppettoDataSourceException
+	public IQueryResponseProcessor getQueryResponseProcessor()
 	{
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.geppetto.core.model.QueryProvider#execute(org.geppetto.core.model.Query, org.geppetto.model.variables.Variable, org.geppetto.core.model.QueryListener)
-	 */
-	@Override
-	public QueryResults execute(Query query, Variable variable, IQueryListener listener) throws GeppettoDataSourceException
-	{
-		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(this.getConfiguration(), getTemplate(), variable, getGeppettoModelAccess(), ConnectionType.GET, new AberOWLResponseProcessor());
-		try
+		if(queryResponseProcessor == null)
 		{
-			GeppettoModelTraversal.apply(query, runQueryVisitor);
-
+			queryResponseProcessor = new AberOWLResponseProcessor();
 		}
-		catch(GeppettoVisitingException e)
-		{
-			throw new GeppettoDataSourceException(e);
-		}
-		return runQueryVisitor.getResults();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.geppetto.core.model.QueryProvider#execute(org.geppetto.core.model.Query, org.geppetto.model.variables.Variable, org.geppetto.core.model.QueryResults,
-	 * org.geppetto.core.model.QueryListener)
-	 */
-	@Override
-	public QueryResults execute(Query query, Variable variable, QueryResults results, IQueryListener listener) throws GeppettoDataSourceException
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.geppetto.core.model.IDataSource#fetchVariable(java.lang.String)
-	 */
-	@Override
-	public void fetchVariable(String variableId) throws GeppettoDataSourceException
-	{
-		Variable fetchedVariable = VariablesFactory.eINSTANCE.createVariable();
-		fetchedVariable.setId(variableId);
-		getGeppettoModelAccess().addVariable(fetchedVariable);
-		Query fetchVariableQuery = getConfiguration().getFetchVariableQuery();
-		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(this.getConfiguration(), getTemplate(), fetchedVariable, getGeppettoModelAccess(), ConnectionType.GET, new AberOWLResponseProcessor());
-		try
-		{
-			GeppettoModelTraversal.apply(fetchVariableQuery, runQueryVisitor);
-
-		}
-		catch(GeppettoVisitingException e)
-		{
-			throw new GeppettoDataSourceException(e);
-		}
+		return queryResponseProcessor;
 	}
 
 }

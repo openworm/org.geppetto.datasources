@@ -11,7 +11,6 @@ import org.geppetto.model.datasources.DatasourcesFactory;
 import org.geppetto.model.datasources.QueryResult;
 import org.geppetto.model.datasources.QueryResults;
 
-
 /**
  * @author matteocantarelli
  *

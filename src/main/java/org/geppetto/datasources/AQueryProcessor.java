@@ -41,7 +41,9 @@ public abstract class AQueryProcessor implements IQueryProcessor
 
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.geppetto.core.datasources.IQueryProcessor#getProcessingOutputMap()
 	 */
 	@Override

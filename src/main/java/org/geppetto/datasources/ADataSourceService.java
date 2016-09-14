@@ -35,13 +35,19 @@ package org.geppetto.datasources;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.geppetto.core.datasources.GeppettoDataSourceException;
 import org.geppetto.core.datasources.IDataSourceService;
+import org.geppetto.core.datasources.IQueryListener;
 import org.geppetto.core.datasources.QueryChecker;
 import org.geppetto.core.model.GeppettoModelAccess;
 import org.geppetto.core.services.AService;
 import org.geppetto.model.datasources.DataSource;
 import org.geppetto.model.datasources.Query;
+import org.geppetto.model.datasources.QueryResults;
+import org.geppetto.model.util.GeppettoModelTraversal;
+import org.geppetto.model.util.GeppettoVisitingException;
 import org.geppetto.model.variables.Variable;
+import org.geppetto.model.variables.VariablesFactory;
 
 /**
  * @author matteocantarelli
@@ -50,10 +56,16 @@ import org.geppetto.model.variables.Variable;
 public abstract class ADataSourceService extends AService implements IDataSourceService
 {
 
+	public abstract ConnectionType getConnectionType();
+
+	public abstract IQueryResponseProcessor getQueryResponseProcessor();
+	
 	public enum ConnectionType
 	{
 		GET, POST
 	}
+
+	protected IQueryResponseProcessor queryResponseProcessor;
 
 	private DataSource configuration;
 
@@ -91,17 +103,7 @@ public abstract class ADataSourceService extends AService implements IDataSource
 		return configuration;
 	}
 
-	/**
-	 * @param url
-	 * @param queryString
-	 * @return
-	 */
-	protected String getQueryURL(String url, String queryString)
-	{
-		String queryURL = null;
-		// TODO Do we need a template? Plain concatenation?
-		return queryURL;
-	}
+
 
 	/*
 	 * (non-Javadoc)
@@ -125,6 +127,84 @@ public abstract class ADataSourceService extends AService implements IDataSource
 	/*
 	 * (non-Javadoc)
 	 * 
+	 * @see org.geppetto.core.model.QueryProvider#execute(org.geppetto.core.model.Query, org.geppetto.model.variables.Variable, org.geppetto.core.model.QueryListener)
+	 */
+	@Override
+	public QueryResults execute(Query query, Variable variable, IQueryListener listener) throws GeppettoDataSourceException
+	{
+		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(variable, getGeppettoModelAccess());
+		runQueryVisitor.doSwitch(query);
+		return runQueryVisitor.getResults();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.geppetto.core.model.QueryProvider#getNumberOfResults(org.geppetto.core.model.Query, org.geppetto.model.variables.Variable, org.geppetto.core.model.QueryResults)
+	 */
+	@Override
+	public int getNumberOfResults(Query query, Variable variable, QueryResults results) throws GeppettoDataSourceException
+	{
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.geppetto.core.model.QueryProvider#getNumberOfResults(org.geppetto.core.model.Query, org.geppetto.model.variables.Variable)
+	 */
+	@Override
+	public int getNumberOfResults(Query query, Variable variable) throws GeppettoDataSourceException
+	{
+		Query fetchVariableQuery = getConfiguration().getFetchVariableQuery();
+		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(variable, getGeppettoModelAccess());
+		try
+		{
+			GeppettoModelTraversal.applyDirectChildren(fetchVariableQuery, runQueryVisitor);
+
+		}
+		catch(GeppettoVisitingException e)
+		{
+			throw new GeppettoDataSourceException(e);
+		}
+
+		return runQueryVisitor.getCount();
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.geppetto.core.model.QueryProvider#execute(org.geppetto.core.model.Query, org.geppetto.model.variables.Variable, org.geppetto.core.model.QueryResults,
+	 * org.geppetto.core.model.QueryListener)
+	 */
+	@Override
+	public QueryResults execute(Query query, Variable variable, QueryResults results, IQueryListener listener) throws GeppettoDataSourceException
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.geppetto.core.model.IDataSource#fetchVariable(java.lang.String)
+	 */
+	@Override
+	public void fetchVariable(String variableId) throws GeppettoDataSourceException
+	{
+		Variable fetchedVariable = VariablesFactory.eINSTANCE.createVariable();
+		fetchedVariable.setId(variableId);
+		getGeppettoModelAccess().addVariable(fetchedVariable);
+		Query fetchVariableQuery = getConfiguration().getFetchVariableQuery();
+		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(fetchedVariable, getGeppettoModelAccess());
+		runQueryVisitor.doSwitch(fetchVariableQuery);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.geppetto.core.services.IService#registerGeppettoService()
 	 */
 	@Override
@@ -132,5 +212,7 @@ public abstract class ADataSourceService extends AService implements IDataSource
 	{
 		// Nothing to do here
 	}
+
+
 
 }

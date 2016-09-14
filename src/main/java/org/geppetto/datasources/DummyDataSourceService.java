@@ -35,6 +35,7 @@ package org.geppetto.datasources;
 import org.geppetto.core.datasources.GeppettoDataSourceException;
 import org.geppetto.core.datasources.IDataSourceService;
 import org.geppetto.core.datasources.IQueryListener;
+import org.geppetto.datasources.neo4j.Neo4jResponseProcessor;
 import org.geppetto.model.GeppettoLibrary;
 import org.geppetto.model.datasources.DataSource;
 import org.geppetto.model.datasources.DataSourceLibraryConfiguration;
@@ -118,14 +119,14 @@ public class DummyDataSourceService extends ADataSourceService implements IDataS
 		fetchedVariable.setId(variableId);
 		getGeppettoModelAccess().addVariable(fetchedVariable);
 		ImportType importType = TypesFactory.eINSTANCE.createImportType();
-		importType.setId("Type"+variableId); //an SWC for instance
-		importType.setUrl(""); //an SWC for instance
+		importType.setId("Type" + variableId); // an SWC for instance
+		importType.setUrl(""); // an SWC for instance
 		fetchedVariable.getTypes().add(importType);
 		importType.setModelInterpreterId("swcModelInterpreter");
-		getGeppettoModelAccess().addTypeToLibrary(importType, getLibraryFor(getConfiguration(),"swc"));
-		
+		getGeppettoModelAccess().addTypeToLibrary(importType, getLibraryFor(getConfiguration(), "swc"));
+
 	}
-	
+
 	/**
 	 * @param dataSource
 	 * @param format
@@ -133,13 +134,30 @@ public class DummyDataSourceService extends ADataSourceService implements IDataS
 	 */
 	private GeppettoLibrary getLibraryFor(DataSource dataSource, String format)
 	{
-		for(DataSourceLibraryConfiguration lc: dataSource.getLibraryConfigurations()){
+		for(DataSourceLibraryConfiguration lc : dataSource.getLibraryConfigurations())
+		{
 			if(lc.getFormat().equals(format))
 			{
 				return lc.getLibrary();
 			}
 		}
 		return null;
+	}
+
+	@Override
+	public ConnectionType getConnectionType()
+	{
+		return ConnectionType.POST;
+	}
+
+	@Override
+	public IQueryResponseProcessor getQueryResponseProcessor()
+	{
+		if(queryResponseProcessor == null)
+		{
+			queryResponseProcessor = new Neo4jResponseProcessor();
+		}
+		return queryResponseProcessor;
 	}
 
 }

@@ -12,7 +12,6 @@ import org.geppetto.model.datasources.DatasourcesFactory;
 import org.geppetto.model.datasources.QueryResult;
 import org.geppetto.model.datasources.QueryResults;
 
-
 /**
  * @author matteocantarelli
  *
@@ -33,7 +32,7 @@ public class AberOWLResponseProcessor implements IQueryResponseProcessor
 
 		List<Map<String, Object>> data = (List<Map<String, Object>>) response.get("result");
 
-		//STEP 1 - Add all the headers
+		// STEP 1 - Add all the headers
 		for(Map<String, Object> rowObject : data)
 		{
 			for(String column : rowObject.keySet())
@@ -44,10 +43,10 @@ public class AberOWLResponseProcessor implements IQueryResponseProcessor
 				}
 			}
 		}
-		
+
 		results.getHeader().addAll(headers);
-		
-		//STEP 2 - Add all the values at the right place
+
+		// STEP 2 - Add all the values at the right place
 		for(Map<String, Object> rowObject : data)
 		{
 			QueryResult resultRow = DatasourcesFactory.eINSTANCE.createQueryResult();
@@ -57,7 +56,8 @@ public class AberOWLResponseProcessor implements IQueryResponseProcessor
 				{
 					resultRow.getValues().add((rowObject.get(column)));
 				}
-				else{
+				else
+				{
 					resultRow.getValues().add(null);
 				}
 			}

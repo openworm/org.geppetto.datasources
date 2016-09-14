@@ -32,9 +32,7 @@
  *******************************************************************************/
 package org.geppetto.datasources;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.eclipse.emf.ecore.EObject;
@@ -47,18 +45,17 @@ import org.geppetto.core.datasources.QueryChecker;
 import org.geppetto.core.datasources.VelocityUtils;
 import org.geppetto.core.model.GeppettoModelAccess;
 import org.geppetto.core.services.ServiceCreator;
-import org.geppetto.datasources.ADataSourceService.ConnectionType;
 import org.geppetto.model.datasources.AQueryResult;
+import org.geppetto.model.datasources.CompoundQuery;
 import org.geppetto.model.datasources.CompoundRefQuery;
 import org.geppetto.model.datasources.DataSource;
-import org.geppetto.model.datasources.DatasourcesFactory;
 import org.geppetto.model.datasources.ProcessQuery;
 import org.geppetto.model.datasources.Query;
-import org.geppetto.model.datasources.QueryResult;
 import org.geppetto.model.datasources.QueryResults;
 import org.geppetto.model.datasources.SerializableQueryResult;
 import org.geppetto.model.datasources.SimpleQuery;
 import org.geppetto.model.datasources.util.DatasourcesSwitch;
+import org.geppetto.model.util.GeppettoModelTraversal;
 import org.geppetto.model.util.GeppettoVisitingException;
 import org.geppetto.model.variables.Variable;
 
@@ -68,7 +65,7 @@ import org.geppetto.model.variables.Variable;
 public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 {
 
-	private DataSource dataSource = null;
+	private static final String ID = "ID";
 
 	private boolean count; // true if we want to execute a count
 
@@ -76,43 +73,23 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 
 	private Variable variable;
 
-	private String dataSourceTemplate;
+	private Map<String, Object> processingOutputMap = new HashMap<String, Object>();
 
 	private GeppettoModelAccess geppettoModelAccess;
 
-	private ConnectionType connectionType;
-
-	private IQueryResponseProcessor queryResponseProcessor;
-
-	private Map<String, Object> processingOutputMap = new HashMap<String, Object>();
-
-	/**
-	 * 
-	 */
-	public ExecuteQueryVisitor(DataSource dataSource, String dataSourceTemplate, Variable variable, GeppettoModelAccess geppettoModelAccess, ConnectionType connectionType,
-			IQueryResponseProcessor queryResponseProcessor)
+	public ExecuteQueryVisitor(Variable variable, GeppettoModelAccess geppettoModelAccess)
 	{
-		this(dataSource, dataSourceTemplate, variable, geppettoModelAccess, false, connectionType, queryResponseProcessor);
+		this.variable = variable;
+		this.geppettoModelAccess = geppettoModelAccess;
 	}
 
-	/**
-	 * @param variable
-	 * @param count
-	 * @param connectionType
-	 * @param queryResponseProcessor
-	 */
-	public ExecuteQueryVisitor(DataSource dataSource, String dataSourceTemplate, Variable variable, GeppettoModelAccess geppettoModelAccess, boolean count, ConnectionType connectionType,
-			IQueryResponseProcessor queryResponseProcessor)
+	private ADataSourceService getDataSourceService(Query query) throws GeppettoInitializationException
 	{
-		super();
-		this.dataSource = dataSource;
-		this.geppettoModelAccess = geppettoModelAccess;
-		this.dataSourceTemplate = dataSourceTemplate;
-		this.variable = variable;
-		this.count = count;
-		this.connectionType = connectionType;
-		this.queryResponseProcessor = queryResponseProcessor;
-		results = DatasourcesFactory.eINSTANCE.createQueryResults();
+		DataSource dataSource = getDataSource(query);
+		ADataSourceService dataSourceService = (ADataSourceService) ServiceCreator.getNewServiceInstance(((DataSource) dataSource).getDataSourceService());
+		dataSourceService.initialize((DataSource) dataSource, geppettoModelAccess);
+		return dataSourceService;
+
 	}
 
 	/*
@@ -123,12 +100,13 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 	@Override
 	public Object caseProcessQuery(ProcessQuery query)
 	{
+
 		if(QueryChecker.check(query, getVariable()))
 		{
 			try
 			{
 				IQueryProcessor queryProcessor = (IQueryProcessor) ServiceCreator.getNewServiceInstance(query.getQueryProcessorId());
-				this.results = queryProcessor.process(query, dataSource, getVariable(), getResults(), geppettoModelAccess);
+				this.results = queryProcessor.process(query, getDataSource(query), getVariable(), getResults(), geppettoModelAccess);
 				this.processingOutputMap = queryProcessor.getProcessingOutputMap();
 			}
 			catch(GeppettoInitializationException e)
@@ -141,6 +119,34 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 			}
 		}
 		return super.caseProcessQuery(query);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.geppetto.model.datasources.util.DatasourcesSwitch#caseCompoundQuery(org.geppetto.model.datasources.CompoundQuery)
+	 */
+	@Override
+	public Object caseCompoundQuery(CompoundQuery query)
+	{
+		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(variable, geppettoModelAccess);
+		runQueryVisitor.processingOutputMap.putAll(processingOutputMap);
+
+		try
+		{
+			GeppettoModelTraversal.applyDirectChildrenOnly(query, runQueryVisitor);
+			mergeResults(runQueryVisitor.getResults());
+		}
+		catch(GeppettoVisitingException e)
+		{
+			return e;
+		}
+		catch(GeppettoDataSourceException e)
+		{
+			return new GeppettoVisitingException(e);
+		}
+
+		return super.caseCompoundQuery(query);
 	}
 
 	/*
@@ -170,12 +176,13 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 		{
 			if(QueryChecker.check(query, getVariable()))
 			{
+				ADataSourceService dataSourceService = getDataSourceService(query);
 				String url = getDataSource(query).getUrl();
 
 				String queryString = count ? query.getCountQuery() : query.getQuery();
 
 				Map<String, Object> properties = new HashMap<String, Object>();
-				properties.put("ID", getVariable().getId());
+				properties.put(ID, getVariable().getId());
 				properties.put("QUERY", queryString);
 
 				if(processingOutputMap != null)
@@ -183,10 +190,10 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 					properties.putAll(processingOutputMap);
 				}
 
-				String processedQueryString = VelocityUtils.processTemplate(dataSourceTemplate, properties);
+				String processedQueryString = VelocityUtils.processTemplate(dataSourceService.getTemplate(), properties);
 
 				String response = null;
-				switch(connectionType)
+				switch(dataSourceService.getConnectionType())
 				{
 					case GET:
 						response = GeppettoHTTPClient.doGET(url, processedQueryString);
@@ -196,10 +203,14 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 						break;
 				}
 
-				processResponse(response);
+				processResponse(response, dataSourceService);
 			}
 		}
 		catch(GeppettoDataSourceException e)
+		{
+			return new GeppettoVisitingException(e);
+		}
+		catch(GeppettoInitializationException e)
 		{
 			return new GeppettoVisitingException(e);
 		}
@@ -208,8 +219,9 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 
 	/**
 	 * @param response
+	 * @throws GeppettoDataSourceException
 	 */
-	private void processResponse(String response)
+	private void processResponse(String response, ADataSourceService dataSourceService) throws GeppettoDataSourceException
 	{
 		// TODO Maybe split in two different visitors?
 		if(count)
@@ -219,43 +231,61 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 		else
 		{
 			Map<String, Object> responseMap = JSONUtility.getAsMap(response);
-			mergeResults(queryResponseProcessor.processResponse(responseMap));
+			results = dataSourceService.getQueryResponseProcessor().processResponse(responseMap);
 		}
 
 	}
 
 	/**
 	 * @param processResponse
+	 * @throws GeppettoDataSourceException
 	 */
-	private void mergeResults(QueryResults processResponse)
+	private void mergeResults(QueryResults processedResults) throws GeppettoDataSourceException
 	{
-		results = processResponse;
-//		if(results != null)
-//		{
-//			
-//
-//			processedResults.getHeader().add("ID");
-//			processedResults.getHeader().add("Name");
-//			processedResults.getHeader().add("Definition");
-//
-//			List<String> ids=new ArrayList<String>();
-//			for(AQueryResult result : results.getResults())
-//			{
-//				SerializableQueryResult processedResult = DatasourcesFactory.eINSTANCE.createSerializableQueryResult();
-//				processedResult.getValues().add(((QueryResult) result).getValues().get(idIndex).toString());
-//				String id=((List<String>) ((QueryResult) result).getValues().get(nameIndex)).get(0);
-//				processedResult.getValues().add(id);
-//				ids.add(id);
-//				processedResult.getValues().add(((QueryResult) result).getValues().get(descirptionIndex).toString());
-//				processedResults.getResults().add(processedResult);
-//			}
-//			
-//			processingOutputMap.put("ARRAY_ID_RESULTS",ids);
-//		}
-//		else
-//		{
-//			results = processResponse;
-//		}
+
+		if(results != null)
+		{
+			if(!results.getHeader().contains(ID) || !processedResults.getHeader().contains(ID))
+			{
+				throw new GeppettoDataSourceException("Cannot merge without an ID in the results");
+			}
+
+			int baseId = results.getHeader().indexOf(ID);
+			int mergeId = processedResults.getHeader().indexOf(ID);
+
+			for(String column : processedResults.getHeader())
+			{
+				if(!column.equals(ID))
+				{
+					results.getHeader().add(column);
+				}
+			}
+
+			for(AQueryResult result : results.getResults())
+			{
+				String currentId = ((SerializableQueryResult) result).getValues().get(baseId);
+				for(AQueryResult mergeResult : processedResults.getResults())
+				{
+					if(((SerializableQueryResult) mergeResult).getValues().get(mergeId).equals(currentId))
+					{
+						// we are in the right row
+						for(String column : processedResults.getHeader())
+						{
+							if(!column.equals(ID))
+							{
+								int columnId = processedResults.getHeader().indexOf(column);
+								((SerializableQueryResult) result).getValues().add(((SerializableQueryResult) mergeResult).getValues().get(columnId));
+							}
+						}
+						break;
+					}
+				}
+			}
+		}
+		else
+		{
+			results = processedResults;
+		}
 
 	}
 

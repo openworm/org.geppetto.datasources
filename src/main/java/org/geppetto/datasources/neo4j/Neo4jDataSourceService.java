@@ -32,23 +32,14 @@
  *******************************************************************************/
 package org.geppetto.datasources.neo4j;
 
-import org.geppetto.core.datasources.GeppettoDataSourceException;
-import org.geppetto.core.datasources.IDataSourceService;
-import org.geppetto.core.datasources.IQueryListener;
 import org.geppetto.datasources.ADataSourceService;
-import org.geppetto.datasources.ExecuteQueryVisitor;
-import org.geppetto.model.datasources.Query;
-import org.geppetto.model.datasources.QueryResults;
-import org.geppetto.model.util.GeppettoModelTraversal;
-import org.geppetto.model.util.GeppettoVisitingException;
-import org.geppetto.model.variables.Variable;
-import org.geppetto.model.variables.VariablesFactory;
+import org.geppetto.datasources.IQueryResponseProcessor;
 
 /**
  * @author matteocantarelli
  *
  */
-public class Neo4jDataSourceService extends ADataSourceService implements IDataSourceService
+public class Neo4jDataSourceService extends ADataSourceService
 {
 
 	public Neo4jDataSourceService()
@@ -56,90 +47,31 @@ public class Neo4jDataSourceService extends ADataSourceService implements IDataS
 		super("/templates/neo4j/queryTemplate.vm");
 	}
 
+	
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.geppetto.core.model.QueryProvider#getNumberOfResults(org.geppetto.core.model.Query, org.geppetto.model.variables.Variable)
+	 * @see org.geppetto.datasources.ADataSourceService#getConnectionType()
 	 */
 	@Override
-	public int getNumberOfResults(Query query, Variable variable) throws GeppettoDataSourceException
+	public ConnectionType getConnectionType()
 	{
-		Query fetchVariableQuery = getConfiguration().getFetchVariableQuery();
-		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(this.getConfiguration(), getTemplate(), variable, getGeppettoModelAccess(), true, ConnectionType.POST,
-				new Neo4jResponseProcessor());
-		try
-		{
-			GeppettoModelTraversal.apply(fetchVariableQuery, runQueryVisitor);
-
-		}
-		catch(GeppettoVisitingException e)
-		{
-			throw new GeppettoDataSourceException(e);
-		}
-
-		return runQueryVisitor.getCount();
+		return ConnectionType.POST;
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.geppetto.core.model.QueryProvider#getNumberOfResults(org.geppetto.core.model.Query, org.geppetto.model.variables.Variable, org.geppetto.core.model.QueryResults)
+	 * @see org.geppetto.datasources.ADataSourceService#getQueryResponseProcessor()
 	 */
 	@Override
-	public int getNumberOfResults(Query query, Variable variable, QueryResults results) throws GeppettoDataSourceException
+	public IQueryResponseProcessor getQueryResponseProcessor()
 	{
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.geppetto.core.model.QueryProvider#execute(org.geppetto.core.model.Query, org.geppetto.model.variables.Variable, org.geppetto.core.model.QueryListener)
-	 */
-	@Override
-	public QueryResults execute(Query query, Variable variable, IQueryListener listener) throws GeppettoDataSourceException
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.geppetto.core.model.QueryProvider#execute(org.geppetto.core.model.Query, org.geppetto.model.variables.Variable, org.geppetto.core.model.QueryResults,
-	 * org.geppetto.core.model.QueryListener)
-	 */
-	@Override
-	public QueryResults execute(Query query, Variable variable, QueryResults results, IQueryListener listener) throws GeppettoDataSourceException
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.geppetto.core.model.IDataSource#fetchVariable(java.lang.String)
-	 */
-	@Override
-	public void fetchVariable(String variableId) throws GeppettoDataSourceException
-	{
-		Variable fetchedVariable = VariablesFactory.eINSTANCE.createVariable();
-		fetchedVariable.setId(variableId);
-		getGeppettoModelAccess().addVariable(fetchedVariable);
-		Query fetchVariableQuery = getConfiguration().getFetchVariableQuery();
-		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(this.getConfiguration(), getTemplate(), fetchedVariable, getGeppettoModelAccess(), ConnectionType.POST,
-				new Neo4jResponseProcessor());
-		try
+		if(queryResponseProcessor == null)
 		{
-			GeppettoModelTraversal.apply(fetchVariableQuery, runQueryVisitor);
-
+			queryResponseProcessor = new Neo4jResponseProcessor();
 		}
-		catch(GeppettoVisitingException e)
-		{
-			throw new GeppettoDataSourceException(e);
-		}
+		return queryResponseProcessor;
 	}
 
 }
