@@ -33,14 +33,10 @@
 package org.geppetto.datasources;
 
 import org.geppetto.core.datasources.GeppettoDataSourceException;
-import org.geppetto.core.datasources.IDataSourceService;
-import org.geppetto.core.datasources.IQueryListener;
 import org.geppetto.datasources.neo4j.Neo4jResponseProcessor;
 import org.geppetto.model.GeppettoLibrary;
 import org.geppetto.model.datasources.DataSource;
 import org.geppetto.model.datasources.DataSourceLibraryConfiguration;
-import org.geppetto.model.datasources.Query;
-import org.geppetto.model.datasources.QueryResults;
 import org.geppetto.model.types.ImportType;
 import org.geppetto.model.types.TypesFactory;
 import org.geppetto.model.variables.Variable;
@@ -50,61 +46,12 @@ import org.geppetto.model.variables.VariablesFactory;
  * @author matteocantarelli
  *
  */
-public class DummyDataSourceService extends ADataSourceService implements IDataSourceService
+public class DummyDataSourceService extends ADataSourceService
 {
 
 	public DummyDataSourceService()
 	{
 		super("");
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.geppetto.core.model.QueryProvider#getNumberOfResults(org.geppetto.core.model.Query, org.geppetto.model.variables.Variable)
-	 */
-	@Override
-	public int getNumberOfResults(Query query, Variable variable) throws GeppettoDataSourceException
-	{
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.geppetto.core.model.QueryProvider#getNumberOfResults(org.geppetto.core.model.Query, org.geppetto.model.variables.Variable, org.geppetto.core.model.QueryResults)
-	 */
-	@Override
-	public int getNumberOfResults(Query query, Variable variable, QueryResults results) throws GeppettoDataSourceException
-	{
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.geppetto.core.model.QueryProvider#execute(org.geppetto.core.model.Query, org.geppetto.model.variables.Variable, org.geppetto.core.model.QueryListener)
-	 */
-	@Override
-	public QueryResults execute(Query query, Variable variable, IQueryListener listener) throws GeppettoDataSourceException
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.geppetto.core.model.QueryProvider#execute(org.geppetto.core.model.Query, org.geppetto.model.variables.Variable, org.geppetto.core.model.QueryResults,
-	 * org.geppetto.core.model.QueryListener)
-	 */
-	@Override
-	public QueryResults execute(Query query, Variable variable, QueryResults results, IQueryListener listener) throws GeppettoDataSourceException
-	{
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	/*

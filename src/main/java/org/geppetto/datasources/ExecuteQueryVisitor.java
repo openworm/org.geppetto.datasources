@@ -60,14 +60,14 @@ import org.geppetto.model.util.GeppettoVisitingException;
 import org.geppetto.model.variables.Variable;
 
 /**
- * @author matteocantarelli Matteo TODO: I really want to move this to the datasource bundle...
+ * @author matteocantarelli
  */
 public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 {
 
 	private static final String ID = "ID";
 
-	private boolean count; // true if we want to execute a count
+	private boolean count = false; // true if we want to execute a count
 
 	private QueryResults results = null;
 
@@ -76,6 +76,8 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 	private Map<String, Object> processingOutputMap = new HashMap<String, Object>();
 
 	private GeppettoModelAccess geppettoModelAccess;
+
+	private int resultsCount = -1;
 
 	public ExecuteQueryVisitor(Variable variable, GeppettoModelAccess geppettoModelAccess)
 	{
@@ -223,10 +225,11 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 	 */
 	private void processResponse(String response, ADataSourceService dataSourceService) throws GeppettoDataSourceException
 	{
-		// TODO Maybe split in two different visitors?
 		if(count)
 		{
-			// TODO update the count
+			Map<String, Object> responseMap = JSONUtility.getAsMap(response);
+			results = dataSourceService.getQueryResponseProcessor().processResponse(responseMap);
+			// TODO How to get the count if it is actually specified?
 		}
 		else
 		{
@@ -321,8 +324,16 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 
 	public int getCount()
 	{
-		// TODO Auto-generated method stub
-		return 0;
+		return resultsCount;
+	}
+
+	/**
+	 * @param countOnly
+	 */
+	public void countOnly(boolean countOnly)
+	{
+		count = countOnly;
+
 	}
 
 }

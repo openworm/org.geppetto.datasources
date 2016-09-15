@@ -33,19 +33,19 @@
 package org.geppetto.datasources;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.geppetto.core.datasources.GeppettoDataSourceException;
 import org.geppetto.core.datasources.IDataSourceService;
-import org.geppetto.core.datasources.IQueryListener;
 import org.geppetto.core.datasources.QueryChecker;
 import org.geppetto.core.model.GeppettoModelAccess;
 import org.geppetto.core.services.AService;
+import org.geppetto.model.datasources.CompoundRefQuery;
 import org.geppetto.model.datasources.DataSource;
 import org.geppetto.model.datasources.Query;
 import org.geppetto.model.datasources.QueryResults;
-import org.geppetto.model.util.GeppettoModelTraversal;
-import org.geppetto.model.util.GeppettoVisitingException;
+import org.geppetto.model.datasources.SimpleQuery;
 import org.geppetto.model.variables.Variable;
 import org.geppetto.model.variables.VariablesFactory;
 
@@ -59,7 +59,7 @@ public abstract class ADataSourceService extends AService implements IDataSource
 	public abstract ConnectionType getConnectionType();
 
 	public abstract IQueryResponseProcessor getQueryResponseProcessor();
-	
+
 	public enum ConnectionType
 	{
 		GET, POST
@@ -72,6 +72,8 @@ public abstract class ADataSourceService extends AService implements IDataSource
 	private String dataSourceTemplate;
 
 	private GeppettoModelAccess geppettoModelAccess;
+
+	private LinkedHashMap<String, QueryResults> cachedResults = new LinkedHashMap<String, QueryResults>();
 
 	public ADataSourceService(String dataSourceTemplate)
 	{
@@ -103,8 +105,6 @@ public abstract class ADataSourceService extends AService implements IDataSource
 		return configuration;
 	}
 
-
-
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -130,26 +130,37 @@ public abstract class ADataSourceService extends AService implements IDataSource
 	 * @see org.geppetto.core.model.QueryProvider#execute(org.geppetto.core.model.Query, org.geppetto.model.variables.Variable, org.geppetto.core.model.QueryListener)
 	 */
 	@Override
-	public QueryResults execute(Query query, Variable variable, IQueryListener listener) throws GeppettoDataSourceException
+	public QueryResults execute(Query query, Variable variable) throws GeppettoDataSourceException
 	{
-		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(variable, getGeppettoModelAccess());
-		runQueryVisitor.doSwitch(query);
-		return runQueryVisitor.getResults();
+		String key = getKey(query, variable);
+		if(cachedResults.containsKey(key))
+		{
+			return cachedResults.get(key);
+		}
+		else
+		{
+			ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(variable, getGeppettoModelAccess());
+			runQueryVisitor.doSwitch(query);
+			QueryResults results = runQueryVisitor.getResults();
+			cache(key, results);
+			return results;
+		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.geppetto.core.model.QueryProvider#getNumberOfResults(org.geppetto.core.model.Query, org.geppetto.model.variables.Variable, org.geppetto.core.model.QueryResults)
+	/**
+	 * @param key
+	 * @param results
 	 */
-	@Override
-	public int getNumberOfResults(Query query, Variable variable, QueryResults results) throws GeppettoDataSourceException
+	private void cache(String key, QueryResults results)
 	{
-		// TODO Auto-generated method stub
-		return 0;
+		if(cachedResults.size() > 10)
+		{
+			cachedResults.remove(cachedResults.keySet().iterator().next());
+		}
+		cachedResults.put(key, results);
+
 	}
 
-	
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -158,32 +169,37 @@ public abstract class ADataSourceService extends AService implements IDataSource
 	@Override
 	public int getNumberOfResults(Query query, Variable variable) throws GeppettoDataSourceException
 	{
-		Query fetchVariableQuery = getConfiguration().getFetchVariableQuery();
-		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(variable, getGeppettoModelAccess());
-		try
+		int count = -1;
+		if(query instanceof CompoundRefQuery)
 		{
-			GeppettoModelTraversal.applyDirectChildren(fetchVariableQuery, runQueryVisitor);
+			SimpleQuery simpleQuery = (SimpleQuery) ((CompoundRefQuery) query).getQueryChain().get(0);
+			ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(variable, getGeppettoModelAccess());
+			if(simpleQuery.getCountQuery() != null && !simpleQuery.getCountQuery().isEmpty())
+			{
+				runQueryVisitor.countOnly(true);
+				// Assumption: in a compound query the number of results is dictated only by the first simple query, any further processing or querying will not increase the number of results.
+				// If this will change this algorithm has to change (and become a visitor)
+				runQueryVisitor.doSwitch(simpleQuery);
+				count = runQueryVisitor.getCount();
+			}
+			else
+			{
+				// There is no query specified, we run everything and we cache it so if it will be actually run later one we'll already have the results
+				count = execute(query, variable).getResults().size();
 
+			}
 		}
-		catch(GeppettoVisitingException e)
-		{
-			throw new GeppettoDataSourceException(e);
-		}
-
-		return runQueryVisitor.getCount();
+		return count;
 	}
-	
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.geppetto.core.model.QueryProvider#execute(org.geppetto.core.model.Query, org.geppetto.model.variables.Variable, org.geppetto.core.model.QueryResults,
-	 * org.geppetto.core.model.QueryListener)
+
+	/**
+	 * @param query
+	 * @param variable
+	 * @return
 	 */
-	@Override
-	public QueryResults execute(Query query, Variable variable, QueryResults results, IQueryListener listener) throws GeppettoDataSourceException
+	private String getKey(Query query, Variable variable)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return query.getPath() + ":" + variable.getPath();
 	}
 
 	/*
@@ -212,7 +228,5 @@ public abstract class ADataSourceService extends AService implements IDataSource
 	{
 		// Nothing to do here
 	}
-
-
 
 }
