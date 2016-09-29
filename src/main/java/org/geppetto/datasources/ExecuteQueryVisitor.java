@@ -102,22 +102,24 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 	@Override
 	public Object caseProcessQuery(ProcessQuery query)
 	{
-
-		if(QueryChecker.check(query, getVariable()))
+		if(!count || (count && query.isRunForCount()))
 		{
-			try
+			if(QueryChecker.check(query, getVariable()))
 			{
-				IQueryProcessor queryProcessor = (IQueryProcessor) ServiceCreator.getNewServiceInstance(query.getQueryProcessorId());
-				this.results = queryProcessor.process(query, getDataSource(query), getVariable(), getResults(), geppettoModelAccess);
-				this.processingOutputMap = queryProcessor.getProcessingOutputMap();
-			}
-			catch(GeppettoInitializationException e)
-			{
-				return new GeppettoVisitingException(e);
-			}
-			catch(GeppettoDataSourceException e)
-			{
-				return new GeppettoVisitingException(e);
+				try
+				{
+					IQueryProcessor queryProcessor = (IQueryProcessor) ServiceCreator.getNewServiceInstance(query.getQueryProcessorId());
+					this.results = queryProcessor.process(query, getDataSource(query), getVariable(), getResults(), geppettoModelAccess);
+					this.processingOutputMap = queryProcessor.getProcessingOutputMap();
+				}
+				catch(GeppettoInitializationException e)
+				{
+					return new GeppettoVisitingException(e);
+				}
+				catch(GeppettoDataSourceException e)
+				{
+					return new GeppettoVisitingException(e);
+				}
 			}
 		}
 		return super.caseProcessQuery(query);
@@ -131,23 +133,25 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 	@Override
 	public Object caseCompoundQuery(CompoundQuery query)
 	{
-		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(variable, geppettoModelAccess);
-		runQueryVisitor.processingOutputMap.putAll(processingOutputMap);
+		if(!count || (count && query.isRunForCount()))
+		{
+			ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(variable, geppettoModelAccess);
+			runQueryVisitor.processingOutputMap.putAll(processingOutputMap);
 
-		try
-		{
-			GeppettoModelTraversal.applyDirectChildrenOnly(query, runQueryVisitor);
-			mergeResults(runQueryVisitor.getResults());
+			try
+			{
+				GeppettoModelTraversal.applyDirectChildrenOnly(query, runQueryVisitor);
+				mergeResults(runQueryVisitor.getResults());
+			}
+			catch(GeppettoVisitingException e)
+			{
+				return e;
+			}
+			catch(GeppettoDataSourceException e)
+			{
+				return new GeppettoVisitingException(e);
+			}
 		}
-		catch(GeppettoVisitingException e)
-		{
-			return e;
-		}
-		catch(GeppettoDataSourceException e)
-		{
-			return new GeppettoVisitingException(e);
-		}
-
 		return super.caseCompoundQuery(query);
 	}
 
@@ -157,13 +161,16 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 	 * @see org.geppetto.model.datasources.util.DatasourcesSwitch#caseCompoundRefQuery(org.geppetto.model.datasources.CompoundRefQuery)
 	 */
 	@Override
-	public Object caseCompoundRefQuery(CompoundRefQuery object)
+	public Object caseCompoundRefQuery(CompoundRefQuery compoundQuery)
 	{
-		for(Query query : object.getQueryChain())
+		if(!count || (count && compoundQuery.isRunForCount()))
 		{
-			this.doSwitch(query);
+			for(Query query : compoundQuery.getQueryChain())
+			{
+				this.doSwitch(query);
+			}
 		}
-		return super.caseCompoundRefQuery(object);
+		return super.caseCompoundRefQuery(compoundQuery);
 	}
 
 	/*
@@ -174,47 +181,57 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 	@Override
 	public Object caseSimpleQuery(SimpleQuery query)
 	{
-		try
+		if(!count || (count && query.isRunForCount()))
 		{
-			if(QueryChecker.check(query, getVariable()))
+			try
 			{
-				ADataSourceService dataSourceService = getDataSourceService(query);
-				String url = getDataSource(query).getUrl();
-
-				String queryString = count ? query.getCountQuery() : query.getQuery();
-
-				Map<String, Object> properties = new HashMap<String, Object>();
-				properties.put(ID, getVariable().getId());
-				properties.put("QUERY", queryString);
-
-				if(processingOutputMap != null)
+				if(QueryChecker.check(query, getVariable()))
 				{
-					properties.putAll(processingOutputMap);
+					ADataSourceService dataSourceService = getDataSourceService(query);
+					String url = getDataSource(query).getUrl();
+					String queryString = null;
+					if(count)
+					{
+						queryString = !query.getCountQuery().isEmpty() ? query.getCountQuery() : query.getQuery();
+					}
+					else
+					{
+						queryString = query.getQuery();
+					}
+
+					Map<String, Object> properties = new HashMap<String, Object>();
+					properties.put(ID, getVariable().getId());
+					properties.put("QUERY", queryString);
+
+					if(processingOutputMap != null)
+					{
+						properties.putAll(processingOutputMap);
+					}
+
+					String processedQueryString = VelocityUtils.processTemplate(dataSourceService.getTemplate(), properties);
+
+					String response = null;
+					switch(dataSourceService.getConnectionType())
+					{
+						case GET:
+							response = GeppettoHTTPClient.doGET(url, processedQueryString);
+							break;
+						case POST:
+							response = GeppettoHTTPClient.doJSONPost(url, processedQueryString);
+							break;
+					}
+
+					processResponse(response, dataSourceService);
 				}
-
-				String processedQueryString = VelocityUtils.processTemplate(dataSourceService.getTemplate(), properties);
-
-				String response = null;
-				switch(dataSourceService.getConnectionType())
-				{
-					case GET:
-						response = GeppettoHTTPClient.doGET(url, processedQueryString);
-						break;
-					case POST:
-						response = GeppettoHTTPClient.doJSONPost(url, processedQueryString);
-						break;
-				}
-
-				processResponse(response, dataSourceService);
 			}
-		}
-		catch(GeppettoDataSourceException e)
-		{
-			return new GeppettoVisitingException(e);
-		}
-		catch(GeppettoInitializationException e)
-		{
-			return new GeppettoVisitingException(e);
+			catch(GeppettoDataSourceException e)
+			{
+				return new GeppettoVisitingException(e);
+			}
+			catch(GeppettoInitializationException e)
+			{
+				return new GeppettoVisitingException(e);
+			}
 		}
 		return super.caseSimpleQuery(query);
 	}

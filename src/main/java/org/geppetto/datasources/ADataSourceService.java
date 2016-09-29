@@ -184,8 +184,11 @@ public abstract class ADataSourceService extends AService implements IDataSource
 			}
 			else
 			{
+				runQueryVisitor.countOnly(true);
+				runQueryVisitor.doSwitch(query);
+				QueryResults results = runQueryVisitor.getResults();
 				// There is no query specified, we run everything and we cache it so if it will be actually run later one we'll already have the results
-				count = execute(query, variable).getResults().size();
+				count = results.getResults().size();
 
 			}
 		}
