@@ -125,6 +125,10 @@ public class ExecuteMultipleQueriesVisitor extends DatasourcesSwitch<Object>
 	private List<String> getIDs(QueryResults results) throws GeppettoDataSourceException
 	{
 		List<String> resultsIDs = new ArrayList<String>();
+		if(results == null || results.getHeader() == null)
+		{
+			throw new GeppettoDataSourceException("The query returned no results");
+		}
 		if(!results.getHeader().contains(ID))
 		{
 			throw new GeppettoDataSourceException("The queries don't have an ID field");
@@ -171,7 +175,8 @@ public class ExecuteMultipleQueriesVisitor extends DatasourcesSwitch<Object>
 						{
 							if(!finalIds.contains(id))
 							{
-								finalResults.getResults().add(result.getResults().get(0)); //Note this will move the element from one list to another (EMF implementation) so although we always access the 0th element it's always a different one
+								finalResults.getResults().add(result.getResults().get(0)); // Note this will move the element from one list to another (EMF implementation) so although we always access
+																							// the 0th element it's always a different one
 								finalIds.add(id);
 							}
 						}

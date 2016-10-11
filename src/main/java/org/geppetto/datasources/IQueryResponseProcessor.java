@@ -34,6 +34,7 @@ package org.geppetto.datasources;
 
 import java.util.Map;
 
+import org.geppetto.core.datasources.GeppettoDataSourceException;
 import org.geppetto.model.datasources.QueryResults;
 
 /**
@@ -43,6 +44,6 @@ import org.geppetto.model.datasources.QueryResults;
 public interface IQueryResponseProcessor
 {
 
-	QueryResults processResponse(Map<String, Object> response);
+	QueryResults processResponse(Map<String, Object> response) throws GeppettoDataSourceException;
 
 }
