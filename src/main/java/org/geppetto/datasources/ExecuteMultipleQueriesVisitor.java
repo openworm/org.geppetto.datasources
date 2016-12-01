@@ -148,6 +148,7 @@ public class ExecuteMultipleQueriesVisitor extends DatasourcesSwitch<Object>
 
 		if(results.keySet().size() > 1)
 		{
+			boolean first = true;
 			for(QueryResults result : results.keySet())
 			{
 				if(finalResults.getHeader().isEmpty())
@@ -165,13 +166,38 @@ public class ExecuteMultipleQueriesVisitor extends DatasourcesSwitch<Object>
 				switch(o)
 				{
 					case AND:
-						System.out.println("IDs " + ids.get(result).size());
-						System.out.println("Results " + result.getResults().size());
+						if(first)
+						{
+							for(String id : ids.get(result))
+							{
+
+								finalResults.getResults().add(result.getResults().get(0)); // Note this will move the element from one list to another (EMF implementation) so although we always access
+																							// the 0th element it's always a different one
+								finalIds.add(id);
+
+							}
+						}
+						List<String> toRemove = new ArrayList<String>();
+						for(String id : finalIds)
+						{
+							if(!ids.get(result).contains(id)) 
+							{
+								toRemove.add(id);
+							}
+						}
+						for(String id : toRemove)
+						{
+							finalResults.getResults().remove(finalIds.indexOf(id));
+							finalIds.remove(id);
+						}
+						break;
+					case OR:
 						for(String id : ids.get(result))
 						{
 							if(!finalIds.contains(id))
 							{
-								finalResults.getResults().add(result.getResults().get(0)); //Note this will move the element from one list to another (EMF implementation) so although we always access the 0th element it's always a different one
+								finalResults.getResults().add(result.getResults().get(0)); // Note this will move the element from one list to another (EMF implementation) so although we always access
+																							// the 0th element it's always a different one
 								finalIds.add(id);
 							}
 						}
@@ -187,6 +213,7 @@ public class ExecuteMultipleQueriesVisitor extends DatasourcesSwitch<Object>
 						}
 						break;
 				}
+				first = false;
 			}
 		}
 		else
