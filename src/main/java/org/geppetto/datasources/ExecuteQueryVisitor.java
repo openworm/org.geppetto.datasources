@@ -242,18 +242,23 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 	 */
 	private void processResponse(String response, ADataSourceService dataSourceService) throws GeppettoDataSourceException
 	{
-		if(count)
-		{
-			Map<String, Object> responseMap = JSONUtility.getAsMap(response);
-			results = dataSourceService.getQueryResponseProcessor().processResponse(responseMap);
-			// TODO How to get the count if it is actually specified?
+		try{
+			if(count)
+			{
+				Map<String, Object> responseMap = JSONUtility.getAsMap(response);
+				results = dataSourceService.getQueryResponseProcessor().processResponse(responseMap);
+				// TODO How to get the count if it is actually specified?
+			}
+			else
+			{
+				Map<String, Object> responseMap = JSONUtility.getAsMap(response);
+				results = dataSourceService.getQueryResponseProcessor().processResponse(responseMap);
+			}
+		}catch (JsonSyntaxException e){
+			System.out.println("JsonSyntaxException handling: " + responce);
+			System.out.println(e);
+			throw new GeppettoDataSourceException(e);
 		}
-		else
-		{
-			Map<String, Object> responseMap = JSONUtility.getAsMap(response);
-			results = dataSourceService.getQueryResponseProcessor().processResponse(responseMap);
-		}
-
 	}
 
 	/**
