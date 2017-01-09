@@ -261,7 +261,7 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 		}catch (JsonSyntaxException e){
 			System.out.println("JsonSyntaxException handling: " + response);
 			System.out.println(e);
-			return new GeppettoDataSourceException(e);
+			throw new GeppettoDataSourceException(e);
 		}
 	}
 
