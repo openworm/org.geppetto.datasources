@@ -227,6 +227,7 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 			}
 			catch(GeppettoDataSourceException e)
 			{
+				System.out.println("Query request: " + url + processedQueryString);
 				return new GeppettoVisitingException(e);
 			}
 			catch(GeppettoInitializationException e)
@@ -258,7 +259,7 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 		}catch (JsonSyntaxException e){
 			System.out.println("JsonSyntaxException handling: " + response);
 			System.out.println(e);
-			throw new GeppettoDataSourceException(e);
+			return new GeppettoDataSourceException(e);
 		}
 	}
 
