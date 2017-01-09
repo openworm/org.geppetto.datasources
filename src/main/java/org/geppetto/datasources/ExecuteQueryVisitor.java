@@ -58,6 +58,7 @@ import org.geppetto.model.datasources.util.DatasourcesSwitch;
 import org.geppetto.model.util.GeppettoModelTraversal;
 import org.geppetto.model.util.GeppettoVisitingException;
 import org.geppetto.model.variables.Variable;
+import com.google.gson.JsonSyntaxException
 
 /**
  * @author matteocantarelli
