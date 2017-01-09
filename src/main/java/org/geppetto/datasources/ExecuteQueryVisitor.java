@@ -184,12 +184,14 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 	{
 		if(!count || (count && query.isRunForCount()))
 		{
+			String processedQueryString = "";
+			String url = "";
 			try
 			{
 				if(QueryChecker.check(query, getVariable()))
 				{
 					ADataSourceService dataSourceService = getDataSourceService(query);
-					String url = getDataSource(query).getUrl();
+					url = getDataSource(query).getUrl();
 					String queryString = null;
 					if(count)
 					{
@@ -209,7 +211,7 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 						properties.putAll(processingOutputMap);
 					}
 
-					String processedQueryString = VelocityUtils.processTemplate(dataSourceService.getTemplate(), properties);
+					processedQueryString = VelocityUtils.processTemplate(dataSourceService.getTemplate(), properties);
 
 					String response = null;
 					switch(dataSourceService.getConnectionType())
