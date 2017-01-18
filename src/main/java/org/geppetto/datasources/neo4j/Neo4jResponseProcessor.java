@@ -27,7 +27,8 @@ public class Neo4jResponseProcessor implements IQueryResponseProcessor
 	public QueryResults processResponse(Map<String, Object> response)
 	{
 		QueryResults results = DatasourcesFactory.eINSTANCE.createQueryResults();
-		if (response.get("results")).size() > 0){
+		if(((List) response.get("results")).size() > 0)
+		{
 			List<String> headers = (List<String>) ((List) ((Map<String, Object>) ((List) response.get("results")).get(0)).get("columns"));
 
 			results.getHeader().addAll(headers);
@@ -44,9 +45,11 @@ public class Neo4jResponseProcessor implements IQueryResponseProcessor
 				}
 				results.getResults().add(resultRow);
 			}
-		}else{
-			//TODO: report reponse to log
-		}	
+		}
+		else
+		{
+			// TODO: report reponse to log
+		}
 		return results;
 	}
 
