@@ -8,12 +8,12 @@ install:
     - cd ..
     - git clone https://github.com/openworm/org.geppetto.core.git -b development
     - cd org.geppetto.core
-    - ! git checkout $TRAVIS_BRANCH
+    - ! git checkout $TRAVIS_BRANCH | :
     - mvn install
     - cd ..    
     - git clone https://github.com/openworm/org.geppetto.simulation.git -b development
     - cd org.geppetto.simulation
-    - ! git checkout $TRAVIS_BRANCH
+    - ! git checkout $TRAVIS_BRANCH | :
     - mvn install
     - cd ..    
 
