@@ -1,19 +1,16 @@
 language: java
 
 install:
-    - git clone https://github.com/openworm/org.geppetto.model.git -b development
+    - git clone https://github.com/openworm/org.geppetto.model.git -b $TRAVIS_BRANCH
     - cd org.geppetto.model
-    - git checkout $TRAVIS_BRANCH || :
     - mvn install
     - cd ..
-    - git clone https://github.com/openworm/org.geppetto.core.git -b development
+    - git clone https://github.com/openworm/org.geppetto.core.git -b $TRAVIS_BRANCH
     - cd org.geppetto.core
-    - git checkout $TRAVIS_BRANCH || :
     - mvn install
     - cd ..    
-    - git clone https://github.com/openworm/org.geppetto.simulation.git -b development
+    - git clone https://github.com/openworm/org.geppetto.simulation.git -b $TRAVIS_BRANCH
     - cd org.geppetto.simulation
-    - git checkout $TRAVIS_BRANCH || :
     - mvn install
     - cd ..    
 
