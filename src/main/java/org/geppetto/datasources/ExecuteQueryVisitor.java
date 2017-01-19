@@ -58,6 +58,7 @@ import org.geppetto.model.datasources.util.DatasourcesSwitch;
 import org.geppetto.model.util.GeppettoModelTraversal;
 import org.geppetto.model.util.GeppettoVisitingException;
 import org.geppetto.model.variables.Variable;
+import com.google.gson.JsonSyntaxException;
 
 /**
  * @author matteocantarelli
@@ -183,12 +184,14 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 	{
 		if(!count || (count && query.isRunForCount()))
 		{
+			String processedQueryString = "";
+			String url = "";
 			try
 			{
 				if(QueryChecker.check(query, getVariable()))
 				{
 					ADataSourceService dataSourceService = getDataSourceService(query);
-					String url = getDataSource(query).getUrl();
+					url = getDataSource(query).getUrl();
 					String queryString = null;
 					if(count)
 					{
@@ -208,7 +211,7 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 						properties.putAll(processingOutputMap);
 					}
 
-					String processedQueryString = VelocityUtils.processTemplate(dataSourceService.getTemplate(), properties);
+					processedQueryString = VelocityUtils.processTemplate(dataSourceService.getTemplate(), properties);
 
 					String response = null;
 					switch(dataSourceService.getConnectionType())
@@ -226,6 +229,7 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 			}
 			catch(GeppettoDataSourceException e)
 			{
+				System.out.println("Query request: " + url + "?" + processedQueryString);
 				return new GeppettoVisitingException(e);
 			}
 			catch(GeppettoInitializationException e)
@@ -242,18 +246,23 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 	 */
 	private void processResponse(String response, ADataSourceService dataSourceService) throws GeppettoDataSourceException
 	{
-		if(count)
-		{
-			Map<String, Object> responseMap = JSONUtility.getAsMap(response);
-			results = dataSourceService.getQueryResponseProcessor().processResponse(responseMap);
-			// TODO How to get the count if it is actually specified?
+		try{
+			if(count)
+			{
+				Map<String, Object> responseMap = JSONUtility.getAsMap(response);
+				results = dataSourceService.getQueryResponseProcessor().processResponse(responseMap);
+				// TODO How to get the count if it is actually specified?
+			}
+			else
+			{
+				Map<String, Object> responseMap = JSONUtility.getAsMap(response);
+				results = dataSourceService.getQueryResponseProcessor().processResponse(responseMap);
+			}
+		}catch (JsonSyntaxException e){
+			System.out.println("JsonSyntaxException handling: " + response);
+			System.out.println(e);
+			throw new GeppettoDataSourceException(e);
 		}
-		else
-		{
-			Map<String, Object> responseMap = JSONUtility.getAsMap(response);
-			results = dataSourceService.getQueryResponseProcessor().processResponse(responseMap);
-		}
-
 	}
 
 	/**
