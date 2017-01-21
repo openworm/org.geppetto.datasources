@@ -131,7 +131,7 @@ public class ExecuteMultipleQueriesVisitor extends DatasourcesSwitch<Object>
 		}
 		if(!results.getHeader().contains(ID))
 		{
-			throw new GeppettoDataSourceException("The queries don't have an ID field");
+			throw new GeppettoDataSourceException("The queries don't have an ID field: " + results.toString());
 		}
 
 		int baseId = results.getHeader().indexOf(ID);
