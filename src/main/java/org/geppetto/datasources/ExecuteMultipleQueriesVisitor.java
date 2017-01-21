@@ -131,7 +131,7 @@ public class ExecuteMultipleQueriesVisitor extends DatasourcesSwitch<Object>
 			throw new GeppettoDataSourceException("The query returned no results");
 		}
 		boolean found = false;
-		String ID;
+		String ID = IDS[0];
 		for (String id:IDS)
 		{
 			if (results.getHeader().contains(id))
