@@ -71,7 +71,8 @@ public class ExecuteMultipleQueriesVisitor extends DatasourcesSwitch<Object>
 	private Map<String, QueryResults> cachedResults;
 	private Map<String, List<String>> cachedIds;
 
-	private static final String ID = "ID";
+	private static final String[] IDS = {"ID","remainder"};
+
 
 	public ExecuteMultipleQueriesVisitor(GeppettoModelAccess geppettoModelAccess, Map<String, QueryResults> cachedResults, Map<String, List<String>> cachedIds)
 	{
@@ -129,9 +130,20 @@ public class ExecuteMultipleQueriesVisitor extends DatasourcesSwitch<Object>
 		{
 			throw new GeppettoDataSourceException("The query returned no results");
 		}
-		if(!results.getHeader().contains(ID))
+		boolean found = false;
+		String ID;
+		for (String id:IDS)
 		{
-			throw new GeppettoDataSourceException("The queries don't have an ID field: " + results.toString());
+			if (results.getHeader().contains(id))
+			{
+				found = true;
+				ID = id;
+			}
+		}
+
+		if(!found)
+		{
+			throw new GeppettoDataSourceException("The queries don't have an ID field only: " + results.getHeader().toString());
 		}
 
 		int baseId = results.getHeader().indexOf(ID);
