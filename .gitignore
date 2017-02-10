@@ -6,3 +6,4 @@ src/main/java/META-INF/MANIFEST.MF
 .classpath
 geppettoTmp/
 /bin
+datasources.iml
