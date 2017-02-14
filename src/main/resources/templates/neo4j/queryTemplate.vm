@@ -3,10 +3,9 @@
     {  
       "statement":"$QUERY",
       "resultDataContents":[  
-        "row",
-        "graph"
+        "row"
       ],
-      "includeStats":true
+      "includeStats":false
     }
   ]
 }
