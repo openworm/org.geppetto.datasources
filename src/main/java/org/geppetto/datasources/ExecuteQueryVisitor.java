@@ -230,6 +230,8 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 			catch(GeppettoDataSourceException e)
 			{
 				System.out.println("Query request: " + url + "?" + processedQueryString);
+				System.out.println(e);
+				e.printStackTrace();
 				return new GeppettoVisitingException(e);
 			}
 			catch(GeppettoInitializationException e)
