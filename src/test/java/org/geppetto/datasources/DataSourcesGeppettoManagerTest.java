@@ -163,7 +163,7 @@ public class DataSourcesGeppettoManagerTest
 	{
 		InputStreamReader inputStreamReader = new InputStreamReader(DataSourcesGeppettoManagerTest.class.getResourceAsStream("/test/geppettoManagerDataSourceTest.json"));
 		geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader);
-		manager.loadProject("1", geppettoProject);
+		manager.loadProject("1", geppettoProject, "");
 
 	}
 
