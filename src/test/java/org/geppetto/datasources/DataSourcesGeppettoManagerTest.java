@@ -162,8 +162,8 @@ public class DataSourcesGeppettoManagerTest
 	public void test03LoadProject() throws IOException, GeppettoInitializationException, GeppettoExecutionException, GeppettoAccessException
 	{
 		InputStreamReader inputStreamReader = new InputStreamReader(DataSourcesGeppettoManagerTest.class.getResourceAsStream("/test/geppettoManagerDataSourceTest.json"));
-		geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader);
-		manager.loadProject("1", geppettoProject, "");
+		geppettoProject = DataManagerHelper.getDataManager().getProjectFromJson(TestUtilities.getGson(), inputStreamReader, null);
+		manager.loadProject("1", geppettoProject);
 
 	}
 
