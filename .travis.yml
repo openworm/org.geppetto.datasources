@@ -3,17 +3,20 @@ language: java
 install:
     - git clone https://github.com/openworm/org.geppetto.model.git
     - cd org.geppetto.model
-    - if [ "`git branch --list $TRAVIS_BRANCH`" ]; then git checkout $TRAVIS_BRANCH ; else echo "Branch $TRAVIS_BRANCH does not exist for the dependent bundle, checking out master ..."; git checkout master; fi
+    - if [ "`git branch --list $TRAVIS_BRANCH`" ]; then git checkout $TRAVIS_BRANCH ; else echo "Branch $TRAVIS_BRANCH does not exist for the dependent bundle, checking out master ..." && git checkout master; fi
+    - git status
     - mvn install
     - cd ..
     - git clone https://github.com/openworm/org.geppetto.core.git
     - cd org.geppetto.core
-    - if [ "`git branch --list $TRAVIS_BRANCH`" ]; then git checkout $TRAVIS_BRANCH ; else echo "Branch $TRAVIS_BRANCH does not exist for the dependent bundle, checking out master ..."; git checkout master; fi
+    - if [ "`git branch --list $TRAVIS_BRANCH`" ]; then git checkout $TRAVIS_BRANCH ; else echo "Branch $TRAVIS_BRANCH does not exist for the dependent bundle, checking out master ..." && git checkout master; fi
+    - git status
     - mvn install
     - cd ..    
     - git clone https://github.com/openworm/org.geppetto.simulation.git
     - cd org.geppetto.simulation
-    - if [ "`git branch --list $TRAVIS_BRANCH`" ]; then git checkout $TRAVIS_BRANCH ; else echo "Branch $TRAVIS_BRANCH does not exist for the dependent bundle, checking out master ..."; git checkout master; fi
+    - if [ "`git branch --list $TRAVIS_BRANCH`" ]; then git checkout $TRAVIS_BRANCH ; else echo "Branch $TRAVIS_BRANCH does not exist for the dependent bundle, checking out master ..." && git checkout master; fi
+    - git status
     - mvn install
     - cd ..    
 
