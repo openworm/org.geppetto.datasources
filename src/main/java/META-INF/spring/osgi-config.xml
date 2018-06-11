@@ -24,6 +24,13 @@
 	<bean id="aberOWLDataSource" scope="prototype" class="org.geppetto.datasources.aberowl.AberOWLDataSourceService">
 	<aop:scoped-proxy proxy-target-class="false"/>
 	</bean>
+
+	<osgi:service id="OWLeryDataSourceExporter" ref="owleryDataSource"
+		interface="org.geppetto.core.datasources.IDataSourceService">
+	</osgi:service>
+	<bean id="owleryDataSource" scope="prototype" class="org.geppetto.datasources.owlery.OWLeryDataSourceService">
+	<aop:scoped-proxy proxy-target-class="false"/>
+	</bean>
 	
 	
 	<bean id="eventListenerBean" class="org.geppetto.core.services.registry.ApplicationListenerBean" />
