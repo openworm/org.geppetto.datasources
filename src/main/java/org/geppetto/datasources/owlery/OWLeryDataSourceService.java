@@ -14,7 +14,7 @@ import org.geppetto.model.variables.Variable;
 import org.geppetto.model.variables.VariablesFactory;
 
 /**
- * @author matteocantarelli
+ * @author dariodelpiano
  *
  */
 public class OWLeryDataSourceService extends ADataSourceService

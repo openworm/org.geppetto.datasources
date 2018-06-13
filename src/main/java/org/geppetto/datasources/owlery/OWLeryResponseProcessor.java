@@ -15,7 +15,7 @@ import org.geppetto.model.datasources.QueryResult;
 import org.geppetto.model.datasources.QueryResults;
 
 /**
- * @author matteocantarelli
+ * @author dariodelpiano
  *
  */
 public class OWLeryResponseProcessor implements IQueryResponseProcessor
