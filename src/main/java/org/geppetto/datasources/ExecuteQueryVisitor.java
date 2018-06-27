@@ -216,6 +216,12 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 	private void processResponse(String response, ADataSourceService dataSourceService) throws GeppettoDataSourceException
 	{
 		try{
+			String customJson = "";
+			if(response.startsWith("[")) {
+				customJson = "{\"response\":"+response+"}";
+				response = customJson;
+			}
+			
 			if(count)
 			{
 				Map<String, Object> responseMap = JSONUtility.getAsMap(response);
