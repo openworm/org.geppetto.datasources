@@ -1,5 +1,5 @@
 
-package org.geppetto.datasources.nblast;
+package org.geppetto.datasources.opencpu;
 
 import org.geppetto.core.datasources.GeppettoDataSourceException;
 import org.geppetto.core.datasources.IQueryListener;
@@ -18,12 +18,12 @@ import org.geppetto.model.variables.VariablesFactory;
  *
  */
 
-public class NBLASTDataSourceService extends ADataSourceService
+public class OpenCPUDataSourceService extends ADataSourceService
 {
 
-	public NBLASTDataSourceService()
+	public OpenCPUDataSourceService()
 	{
-		super("/templates/NBLAST/queryTemplate.vm");
+		super("/templates/OpenCPU/queryTemplate.vm");
 	}
 
 
@@ -48,7 +48,7 @@ public class NBLASTDataSourceService extends ADataSourceService
 	{
 		if(queryResponseProcessor == null)
 		{
-			queryResponseProcessor = new NBLASTResponseProcessor();
+			queryResponseProcessor = new OpenCPUResponseProcessor();
 		}
 		return queryResponseProcessor;
 	}

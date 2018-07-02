@@ -1,5 +1,5 @@
 
-package org.geppetto.datasources.nblast;
+package org.geppetto.datasources.opencpu;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +16,7 @@ import org.geppetto.model.datasources.QueryResults;
  * @author dariodelpiano
  *
  */
-public class NBLASTResponseProcessor implements IQueryResponseProcessor
+public class OpenCPUResponseProcessor implements IQueryResponseProcessor
 {
 
 	/*

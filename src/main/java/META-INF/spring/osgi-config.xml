@@ -32,10 +32,10 @@
 	<aop:scoped-proxy proxy-target-class="false"/>
 	</bean>
 	
-	<osgi:service id="nblastDataSourceExporter" ref="nblastDataSource"
+	<osgi:service id="OpenCPUDataSourceExporter" ref="opencpuDataSource"
 		interface="org.geppetto.core.datasources.IDataSourceService">
 	</osgi:service>
-	<bean id="nblastDataSource" scope="prototype" class="org.geppetto.datasources.nblast.NBLASTDataSourceService">
+	<bean id="opencpuDataSource" scope="prototype" class="org.geppetto.datasources.opencpu.OpenCPUDataSourceService">
 	<aop:scoped-proxy proxy-target-class="false"/>
 	</bean>
 	
