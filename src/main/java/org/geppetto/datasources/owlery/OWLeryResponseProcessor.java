@@ -28,14 +28,12 @@ public class OWLeryResponseProcessor implements IQueryResponseProcessor
 	 */
 	@Override
 	public QueryResults processResponse(Map<String, Object> response)
-	{
-		List<String> validKeys = Arrays.asList("hasInstance", "equivalentClass", "subClassOf", "superClassOf", "isSatisfiable", "value");
-		
+	{		
 		QueryResults results = DatasourcesFactory.eINSTANCE.createQueryResults();
 		List<String> headers = new ArrayList<String>();
 
 		for(String keyExtracted : response.keySet()) {
-			if(validKeys.contains((String)keyExtracted) && !headers.contains(keyExtracted)) {
+			if(!headers.contains(keyExtracted)) {
 				headers.add(keyExtracted);
 			}
 		}
