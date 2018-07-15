@@ -184,9 +184,10 @@ public class DataSourcesGeppettoManagerTest
 	@Test
 	public void test06FetchVariable() throws GeppettoExecutionException, GeppettoAccessException, GeppettoDataSourceException, GeppettoModelException
 	{
+		String[] idsList = {"testVariable"};
 		GeppettoModel geppettoModel = runtimeProject.getGeppettoModel();
 		Assert.assertEquals(1, geppettoModel.getVariables().size()); // only "time" //FIXME Should time be there without a simulation?
-		GeppettoModel model = manager.fetchVariable("testDataSource", "testVariable", geppettoProject);
+		GeppettoModel model = manager.fetchVariable("testDataSource", idsList, geppettoProject);
 		Assert.assertEquals("testVariable", model.getVariables().get(1).getId());
 	}
 
