@@ -184,11 +184,13 @@ public class DataSourcesGeppettoManagerTest
 	@Test
 	public void test06FetchVariable() throws GeppettoExecutionException, GeppettoAccessException, GeppettoDataSourceException, GeppettoModelException
 	{
-		String[] idsList = {"testVariable"};
+		// the duplicates are intentional, the RunTimeProject class will check if duplicates want to be fetched or if they are already in the current model.
+		String[] idsList = {"testVariable", "testVariable", "testVariable2", "testVariable2", "testVariable"};
 		GeppettoModel geppettoModel = runtimeProject.getGeppettoModel();
 		Assert.assertEquals(1, geppettoModel.getVariables().size()); // only "time" //FIXME Should time be there without a simulation?
 		GeppettoModel model = manager.fetchVariable("testDataSource", idsList, geppettoProject);
 		Assert.assertEquals("testVariable", model.getVariables().get(1).getId());
+		Assert.assertEquals("testVariable2", model.getVariables().get(2).getId());
 	}
 
 	/**
@@ -202,15 +204,15 @@ public class DataSourcesGeppettoManagerTest
 	{
 		GeppettoModel geppettoModel = runtimeProject.getGeppettoModel();
 		Type type = geppettoModel.getLibraries().get(0).getTypes().get(0);
-		Assert.assertEquals(1, geppettoModel.getLibraries().get(0).getTypes().size());
+		Assert.assertEquals(2, geppettoModel.getLibraries().get(0).getTypes().size());
 		Assert.assertEquals("testImportType", type.getId());
 		Assert.assertTrue(type instanceof ImportType);
 		List<String> types=new ArrayList<String>();
 		types.add("testLibrary.testImportType");
 		GeppettoModel model = manager.resolveImportType(types, geppettoProject);
-		type = model.getLibraries().get(0).getTypes().get(0);
+		type = model.getLibraries().get(0).getTypes().get(1);
 		Assert.assertTrue(type instanceof CompositeType);
-		Assert.assertEquals(1, model.getLibraries().get(0).getTypes().size()); //still only one type but this time it's a composite
+		Assert.assertEquals(2, model.getLibraries().get(0).getTypes().size()); //still only one type but this time it's a composite
 		Assert.assertEquals(5, ((CompositeType) type).getVariables().size());
 
 	}
