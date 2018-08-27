@@ -216,6 +216,16 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 	private void processResponse(String response, ADataSourceService dataSourceService) throws GeppettoDataSourceException
 	{
 		try{
+			String customJson = "";
+			if(response.startsWith("[")) {
+				/* Checking if the server returns an array and if that's the case adding a dummy response 
+				 * object to fit the JSON into our standard Map<String, Object> representation. 
+				 * Regarding the String manipulation although ugly this is the most performant way of performing 
+				 * this task. */
+				customJson = "{\"response\":"+response+"}";
+				response = customJson;
+			}
+			
 			if(count)
 			{
 				Map<String, Object> responseMap = JSONUtility.getAsMap(response);
