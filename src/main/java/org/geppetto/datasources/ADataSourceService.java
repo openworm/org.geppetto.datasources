@@ -144,10 +144,12 @@ public abstract class ADataSourceService extends AService implements IDataSource
 	{
 		Variable fetchedVariable = VariablesFactory.eINSTANCE.createVariable();
 		fetchedVariable.setId(variableId);
-		getGeppettoModelAccess().addVariable(fetchedVariable);
 		Query fetchVariableQuery = getConfiguration().getFetchVariableQuery();
 		ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(fetchedVariable, getGeppettoModelAccess());
 		runQueryVisitor.doSwitch(fetchVariableQuery);
+		if( !(fetchedVariable.getAnonymousTypes().isEmpty()) || !(fetchedVariable.getTypes().isEmpty())) {
+			getGeppettoModelAccess().addVariable(fetchedVariable);
+		}
 	}
 
 	/*
