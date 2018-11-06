@@ -75,6 +75,7 @@ public class DataSourcesGeppettoManagerTest
 		context.registerBeanDefinition("scopedTarget.testDataSourceService", dataSourceBeanDefinition);
 		context.registerBeanDefinition("testQueryProcessorService", queryProcessorBeanDefinition);
 		context.registerBeanDefinition("scopedTarget.testQueryProcessorService", queryProcessorBeanDefinition);
+		context.refresh();
 		ContextRefreshedEvent event = new ContextRefreshedEvent(context);
 		ApplicationListenerBean listener = new ApplicationListenerBean();
 		listener.onApplicationEvent(event);
