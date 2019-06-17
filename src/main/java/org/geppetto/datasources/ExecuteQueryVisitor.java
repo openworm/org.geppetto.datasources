@@ -2,7 +2,9 @@
 package org.geppetto.datasources;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.emf.ecore.EObject;
 import org.geppetto.core.common.GeppettoHTTPClient;
@@ -18,6 +20,7 @@ import org.geppetto.model.datasources.AQueryResult;
 import org.geppetto.model.datasources.CompoundQuery;
 import org.geppetto.model.datasources.CompoundRefQuery;
 import org.geppetto.model.datasources.DataSource;
+import org.geppetto.model.datasources.DatasourcesFactory;
 import org.geppetto.model.datasources.ProcessQuery;
 import org.geppetto.model.datasources.Query;
 import org.geppetto.model.datasources.QueryResults;
@@ -257,9 +260,22 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 			{
 				throw new GeppettoDataSourceException("Cannot merge without an ID in the results");
 			}
-
+			
+			QueryResults mergedResults = DatasourcesFactory.eINSTANCE.createQueryResults();
+			Set<String> idsList = new HashSet<String>();
+			
 			int baseId = results.getHeader().indexOf(ID);
 			int mergeId = processedResults.getHeader().indexOf(ID);
+			
+			for(AQueryResult result : results.getResults())
+			{
+				idsList.add(((SerializableQueryResult) result).getValues().get(baseId));
+			}
+			
+			for(AQueryResult result : processedResults.getResults())
+			{
+				idsList.add(((SerializableQueryResult) result).getValues().get(mergeId));
+			}
 
 			for(String column : processedResults.getHeader())
 			{
@@ -268,27 +284,41 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 					results.getHeader().add(column);
 				}
 			}
-
-			for(AQueryResult result : results.getResults())
+			
+			for(String column : results.getHeader())
 			{
-				String currentId = ((SerializableQueryResult) result).getValues().get(baseId);
-				for(AQueryResult mergeResult : processedResults.getResults())
-				{
-					if(((SerializableQueryResult) mergeResult).getValues().get(mergeId).equals(currentId))
-					{
-						// we are in the right row
-						for(String column : processedResults.getHeader())
-						{
-							if(!column.equals(ID))
-							{
-								int columnId = processedResults.getHeader().indexOf(column);
-								((SerializableQueryResult) result).getValues().add(((SerializableQueryResult) mergeResult).getValues().get(columnId));
-							}
-						}
-						break;
+				mergedResults.getHeader().add(column);
+			}
+			
+			for(String id : idsList) {
+				SerializableQueryResult newRecord = null;
+				for(AQueryResult result : results.getResults()) {
+					if(((SerializableQueryResult) result).getValues().get(baseId).equals(id)) {
+						newRecord = (SerializableQueryResult) result;
 					}
 				}
+				
+				for(AQueryResult result : processedResults.getResults()) {
+					if(((SerializableQueryResult) result).getValues().get(mergeId).equals(id)) {
+						if(newRecord == null) {
+							newRecord = (SerializableQueryResult) result;
+						} else {
+							for(String column : processedResults.getHeader())
+							{
+								if(!column.equals(ID))
+								{
+									int columnId = processedResults.getHeader().indexOf(column);
+									((SerializableQueryResult) newRecord).getValues().add(((SerializableQueryResult) result).getValues().get(columnId));
+								}
+							}
+							break;
+						}
+					}
+				}
+				
+				mergedResults.getResults().add(newRecord);
 			}
+			results = mergedResults;
 		}
 		else
 		{
