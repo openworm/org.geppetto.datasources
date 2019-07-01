@@ -43,6 +43,7 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 	private boolean count = false; // true if we want to execute a count
 
 	private QueryResults results = null;
+	private QueryResults mergedResults = DatasourcesFactory.eINSTANCE.createQueryResults();
 
 	private Variable variable;
 
@@ -261,7 +262,6 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 				throw new GeppettoDataSourceException("Cannot merge without an ID in the results");
 			}
 			
-			QueryResults mergedResults = DatasourcesFactory.eINSTANCE.createQueryResults();
 			Set<String> idsList = new HashSet<String>();
 			
 			int baseId = results.getHeader().indexOf(ID);
@@ -290,7 +290,10 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 				mergedResults.getHeader().add(column);
 			}
 			
+			int lastId = mergedResults.getHeader().indexOf(ID);
+			
 			for(String id : idsList) {
+				Boolean resultAdded = false;
 				SerializableQueryResult newRecord = null;
 				for(AQueryResult result : results.getResults()) {
 					if(((SerializableQueryResult) result).getValues().get(baseId).equals(id)) {
@@ -316,7 +319,17 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 					}
 				}
 				
-				mergedResults.getResults().add(newRecord);
+				for(AQueryResult result : mergedResults.getResults()) {
+					if((((SerializableQueryResult) result).getValues().get(lastId).equals(id)) && newRecord != null) {
+						result = newRecord;
+						resultAdded = true;
+						break;
+					}
+				}
+				
+				if(!resultAdded) { 
+					mergedResults.getResults().add(newRecord);
+				}
 			}
 			results = mergedResults;
 		}
