@@ -2,7 +2,9 @@
 package org.geppetto.datasources;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.emf.ecore.EObject;
 import org.geppetto.core.common.GeppettoHTTPClient;
@@ -18,6 +20,7 @@ import org.geppetto.model.datasources.AQueryResult;
 import org.geppetto.model.datasources.CompoundQuery;
 import org.geppetto.model.datasources.CompoundRefQuery;
 import org.geppetto.model.datasources.DataSource;
+import org.geppetto.model.datasources.DatasourcesFactory;
 import org.geppetto.model.datasources.ProcessQuery;
 import org.geppetto.model.datasources.Query;
 import org.geppetto.model.datasources.QueryResults;
@@ -40,6 +43,7 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 	private boolean count = false; // true if we want to execute a count
 
 	private QueryResults results = null;
+	private QueryResults mergedResults = DatasourcesFactory.eINSTANCE.createQueryResults();
 
 	private Variable variable;
 
@@ -250,17 +254,34 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 	 */
 	private void mergeResults(QueryResults processedResults) throws GeppettoDataSourceException
 	{
-
+		// if this arrives from a first query results should be empty, so we automatically assign 
+		// processedResults to results
 		if(results != null)
 		{
 			if(!results.getHeader().contains(ID) || !processedResults.getHeader().contains(ID))
 			{
 				throw new GeppettoDataSourceException("Cannot merge without an ID in the results");
 			}
-
+			
+			Set<String> idsList = new HashSet<String>();
+			
+			// Extract the index of the id for each list of results
 			int baseId = results.getHeader().indexOf(ID);
 			int mergeId = processedResults.getHeader().indexOf(ID);
+			
+			// add all the ids from results and processedResults to idsList, a Set that will contain all
+			// unique ids that we can iterate to do a merge of the data
+			for(AQueryResult result : results.getResults())
+			{
+				idsList.add(((SerializableQueryResult) result).getValues().get(baseId));
+			}
+			
+			for(AQueryResult result : processedResults.getResults())
+			{
+				idsList.add(((SerializableQueryResult) result).getValues().get(mergeId));
+			}
 
+			// Extract all the headers contained in results and processedResults and put all in mergedResults
 			for(String column : processedResults.getHeader())
 			{
 				if(!column.equals(ID))
@@ -268,27 +289,75 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 					results.getHeader().add(column);
 				}
 			}
-
-			for(AQueryResult result : results.getResults())
+			
+			for(String column : results.getHeader())
 			{
-				String currentId = ((SerializableQueryResult) result).getValues().get(baseId);
-				for(AQueryResult mergeResult : processedResults.getResults())
-				{
-					if(((SerializableQueryResult) mergeResult).getValues().get(mergeId).equals(currentId))
-					{
-						// we are in the right row
-						for(String column : processedResults.getHeader())
-						{
-							if(!column.equals(ID))
+				mergedResults.getHeader().add(column);
+			}
+			
+			int lastId = mergedResults.getHeader().indexOf(ID);
+			
+			for(String id : idsList) {
+				// This is the real deal, here we iterate all the ids and for each id
+				Boolean resultAdded = false;
+				SerializableQueryResult newRecord = null;
+				for(AQueryResult result : results.getResults()) {
+					// if the id is found in one of the records contained in results then we set newRecord
+					// to the result found
+					if(((SerializableQueryResult) result).getValues().get(baseId).equals(id)) {
+						newRecord = (SerializableQueryResult) result;
+					}
+				}
+
+				// Then we check the same id in processedResults
+				for(AQueryResult result : processedResults.getResults()) {
+					// If this is found 
+					if(((SerializableQueryResult) result).getValues().get(mergeId).equals(id)) {
+						// and was not found in the results iteration, then newRecord will be set to this result
+						if(newRecord == null) {
+							newRecord = (SerializableQueryResult) result;
+						// differently we iterate this results per column and we add whatever is present here
+						// that was not present in the previous check, keep in mind that we overwrite also the
+						// columns that were already present
+						} else {
+							for(String column : processedResults.getHeader())
 							{
-								int columnId = processedResults.getHeader().indexOf(column);
-								((SerializableQueryResult) result).getValues().add(((SerializableQueryResult) mergeResult).getValues().get(columnId));
+								if(!column.equals(ID))
+								{
+									int columnId = processedResults.getHeader().indexOf(column);
+									((SerializableQueryResult) newRecord).getValues().add(((SerializableQueryResult) result).getValues().get(columnId));
+								}
 							}
+							break;
 						}
+					}
+				}
+				
+				// Finally we check if this id is present also in mergedResults, that carry over all the results
+				// from previous queries/compound, if this was already present then we overwrite all the
+				// previous informations with the coming one
+				for(AQueryResult result : mergedResults.getResults()) {
+					if((((SerializableQueryResult) result).getValues().get(lastId).equals(id)) && newRecord != null) {
+						for(String column : mergedResults.getHeader())
+							{
+								if(!column.equals(ID))
+								{
+									int columnId = mergedResults.getHeader().indexOf(column);
+									((SerializableQueryResult) result).getValues().add(((SerializableQueryResult) newRecord).getValues().get(columnId));
+								}
+							}
+						resultAdded = true;
 						break;
 					}
 				}
+				
+				// Instead if the id was not present in mergedResult we simply add this record
+				if(!resultAdded) { 
+					mergedResults.getResults().add(newRecord);
+				}
 			}
+			// Then we re-initialize results as mergedResults that contains all the results to pass to frontend
+			results = mergedResults;
 		}
 		else
 		{
