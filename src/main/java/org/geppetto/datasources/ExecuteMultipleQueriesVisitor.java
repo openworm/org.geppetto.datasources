@@ -120,17 +120,9 @@ public class ExecuteMultipleQueriesVisitor extends DatasourcesSwitch<Object>
 			boolean first = true;
 			for(QueryResults result : results.keySet())
 			{
-				if(finalResults.getHeader().isEmpty())
-				{
-					finalResults.getHeader().addAll(result.getHeader());
-				}
-				else
-				{
-					if(!finalResults.getHeader().equals(result.getHeader()))
-					{
-						throw new GeppettoDataSourceException("Multiple queries were executed but they returned incompatible headers");
-					}
-				}
+				// Merge all headers into finalResults instead of only when is empty
+				finalResults.getHeader().addAll(result.getHeader());
+				
 				BooleanOperator o = results.get(result);
 				switch(o)
 				{
