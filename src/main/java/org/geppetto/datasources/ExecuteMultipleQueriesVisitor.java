@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.geppetto.core.datasources.GeppettoDataSourceException;
 import org.geppetto.core.model.GeppettoModelAccess;
@@ -120,16 +121,14 @@ public class ExecuteMultipleQueriesVisitor extends DatasourcesSwitch<Object>
 			boolean first = true;
 			for(QueryResults result : results.keySet())
 			{
-				if(finalResults.getHeader().isEmpty())
-				{
-					finalResults.getHeader().addAll(result.getHeader());
+				// If no ID present in one of the results, return '0 results'
+				if(!result.getHeader().contains(ID)){
+					finalResults = DatasourcesFactory.eINSTANCE.createQueryResults();
+					return finalResults;
 				}
-				else
-				{
-					if(!finalResults.getHeader().equals(result.getHeader()))
-					{
-						throw new GeppettoDataSourceException("Multiple queries were executed but they returned incompatible headers");
-					}
+				// If it's the first result, add the headers to 'finalResults' before continuing
+				if(first){
+					finalResults.getHeader().addAll(result.getHeader());
 				}
 				BooleanOperator o = results.get(result);
 				switch(o)
@@ -153,11 +152,22 @@ public class ExecuteMultipleQueriesVisitor extends DatasourcesSwitch<Object>
 							{
 								toRemove.add(id);
 							}
+							// Merge results, only for second result and beyond, and if ID in new results matches
+							// one in the first result.
+							else if(ids.get(result).contains(id) && !first){
+								mergeResult(result, id);
+							}
 						}
 						for(String id : toRemove)
 						{
 							finalResults.getResults().remove(finalIds.indexOf(id));
 							finalIds.remove(id);
+						}
+						
+						// Add headers for new result to 'finalResults' list, this is done after merging results 
+						// to avoid having a mismatch of values and headers prior to the merge.
+						if(!first){
+							finalResults.getHeader().addAll(result.getHeader());
 						}
 						break;
 					case OR:
@@ -212,6 +222,40 @@ public class ExecuteMultipleQueriesVisitor extends DatasourcesSwitch<Object>
 		cachedIds.put(key, new ArrayList<String>());
 		cachedIds.get(key).addAll(ids);
 
+	}
+	
+	/**
+	 * This function takes new QueryResults (the 'result' parameter ) and merges it with an existing QueryResult in the
+	 * 'finalResults' list. The match happens using the 'id' parameter, if no match is present nothing is done.
+	 * 
+	 * @param result - The new result to be merged into 'finalResults'.
+	 * @param id - The id of the existing QueryResult found in 'finalResults' list that matches the ID of the new QueryResult
+	 */
+	private void mergeResult(QueryResults result, String id){
+		// Extract index from 'result' list
+		int resultIndex = ids.get(result).indexOf(id);
+		// Extract the ID column value from the new QueryResult that matched the 'id' of the existing result
+		String resultID = 
+				((SerializableQueryResult) result.getResults().get(resultIndex)).getValues().get(result.getHeader().indexOf(ID));
+		// Extract the existing matching QueryResult in 'finalResults', this belongs to previous QueryResult(s) already added
+		SerializableQueryResult existingResult = 
+				(SerializableQueryResult) finalResults.getResults().get(finalIds.indexOf(resultID));
+		// Extract column headers in new QueryResult
+		EList<String> newResultHeaders = result.getHeader();
+		// Extract column headers from existing QueryResult already added to 'finalResults' list
+		EList<String> finalResultsHeaders = finalResults.getHeader();
+		// Extract column values for new QueryResult
+		EList<String> resultValues = ((SerializableQueryResult) result.getResults().get(resultIndex)).getValues();
+		// Loop through headers of new QueryResult, if a header is not present in 'finalResults', add its value
+		// to the matching existing QueryResult in the final list.
+		for(String header : newResultHeaders){
+			int indexFinalHeaders = finalResultsHeaders.indexOf(header);
+			int newResultIndexHeader = newResultHeaders.indexOf(header);
+			// If a header is not present in 'finalResults' list, we add the new column value to the existing QueryResult.
+			if(indexFinalHeaders==-1){
+				existingResult.getValues().add(resultValues.get(newResultIndexHeader));
+			}
+		}
 	}
 
 	/**
