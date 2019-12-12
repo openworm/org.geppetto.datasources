@@ -225,33 +225,33 @@ public class ExecuteMultipleQueriesVisitor extends DatasourcesSwitch<Object>
 	}
 	
 	/**
-	 * This function takes new QueryResults, 'result' parameter, and merges it with an existing QueryResult in 
+	 * This function takes new QueryResults (the 'result' parameter ) and merges it with an existing QueryResult in the
 	 * 'finalResults' list. The match happens using the 'id' parameter, if no match is present nothing is done.
 	 * 
 	 * @param result - The new result to be merged into 'finalResults'.
-	 * @param id - The id of the existing result found in 'finalResults' that matches the new result
+	 * @param id - The id of the existing QueryResult found in 'finalResults' list that matches the ID of the new QueryResult
 	 */
 	private void mergeResult(QueryResults result, String id){
 		// Extract index from 'result' list
 		int resultIndex = ids.get(result).indexOf(id);
-		// Extract the ID column value from 'result' that matched the passed 'id'
+		// Extract the ID column value from the new QueryResult that matched the 'id' of the existing result
 		String resultID = 
 				((SerializableQueryResult) result.getResults().get(resultIndex)).getValues().get(result.getHeader().indexOf(ID));
-		// Extract the existing result in 'finalResults' that matches the one in the second result
+		// Extract the existing matching QueryResult in 'finalResults', this belongs to previous QueryResult(s) already added
 		SerializableQueryResult existingResult = 
 				(SerializableQueryResult) finalResults.getResults().get(finalIds.indexOf(resultID));
-		// Extract column headers for new result
+		// Extract column headers in new QueryResult
 		EList<String> newResultHeaders = result.getHeader();
-		// Extract column headers from 'finalResults', belonging to previous result(s)
+		// Extract column headers from existing QueryResult already added to 'finalResults' list
 		EList<String> finalResultsHeaders = finalResults.getHeader();
-		// Extract column values for new result
+		// Extract column values for new QueryResult
 		EList<String> resultValues = ((SerializableQueryResult) result.getResults().get(resultIndex)).getValues();
-		// Loop through headers of new result, and if a header is not present in 'finalResults' add it
-		// to the matching existing result in that list.
+		// Loop through headers of new QueryResult, if a header is not present in 'finalResults', add its value
+		// to the matching existing QueryResult in the final list.
 		for(String header : newResultHeaders){
 			int indexFinalHeaders = finalResultsHeaders.indexOf(header);
 			int newResultIndexHeader = newResultHeaders.indexOf(header);
-			// If header is not present in result found in 'finalResults' list, we add the new value to the result
+			// If a header is not present in 'finalResults' list, we add the new column value to the existing QueryResult.
 			if(indexFinalHeaders==-1){
 				existingResult.getValues().add(resultValues.get(newResultIndexHeader));
 			}
