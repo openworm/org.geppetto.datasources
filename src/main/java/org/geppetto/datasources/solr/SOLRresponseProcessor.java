@@ -8,7 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.json.JSONObject;
+import com.google.gson.JsonObject;
 
 import org.geppetto.datasources.IQueryResponseProcessor;
 import org.geppetto.model.datasources.DatasourcesFactory;
@@ -47,7 +47,7 @@ public class SOLRresponseProcessor implements IQueryResponseProcessor
 					keySet.remove("_version_");
 					queryName = keySet.toString();
 				}
-				JSONObject row = new JSONObject((String) rowObject.get(queryName));
+				JsonObject row = new JsonObject((String) rowObject.get(queryName));
 				Set<String> keySet = row.keySet();
 				if (headers.size() < 1) {
 					headers = row.keySet();
