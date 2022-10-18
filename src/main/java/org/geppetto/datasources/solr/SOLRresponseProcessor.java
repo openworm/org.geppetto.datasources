@@ -8,7 +8,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import com.google.gson.JsonObject;
 
 import org.geppetto.datasources.IQueryResponseProcessor;
 import org.geppetto.model.datasources.DatasourcesFactory;
@@ -33,11 +32,10 @@ public class SOLRresponseProcessor implements IQueryResponseProcessor
 		QueryResults results = DatasourcesFactory.eINSTANCE.createQueryResults();
 		if(((Integer) ((Map<String, Object>) response.get("response")).get("numFound")) > 0)
 		{
-			List<String> headers = new ArrayList<String>();
+			Set<String> headers = new HashSet<String>();
 			String queryName = null;
 			results.getResults().clear();
 			List<Map<String, Object>> data = (List<Map<String, Object>>) ((List) ((Map<String, Object>) ((List) response.get("response")).get(0)).get("data"));
-			Set<String> headers = new HashSet<String>();
 			for(Map<String, Object> rowObject : data)
 			{
 				QueryResult resultRow = DatasourcesFactory.eINSTANCE.createQueryResult();
@@ -47,12 +45,10 @@ public class SOLRresponseProcessor implements IQueryResponseProcessor
 					keySet.remove("_version_");
 					queryName = keySet.toString();
 				}
-				JsonObject row = new JsonObject((String) rowObject.get(queryName));
-				Set<String> keySet = row.keySet();
 				if (headers.size() < 1) {
-					headers = row.keySet();
+					headers.add("JSON");
 				}
-				results.getResults().add(resultRow);
+				results.getResults().add((String) rowObject.get(queryName));
 			}
 			results.getHeader().addAll(headers);
 		}
