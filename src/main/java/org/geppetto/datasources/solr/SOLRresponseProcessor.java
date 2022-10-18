@@ -48,7 +48,8 @@ public class SOLRresponseProcessor implements IQueryResponseProcessor
 				if (headers.size() < 1) {
 					headers.add("JSON");
 				}
-				results.getResults().add((String) rowObject.get(queryName));
+				resultRow.getValues().add((String) rowObject.get(queryName));
+				results.getResults().add(resultRow);
 			}
 			results.getHeader().addAll(headers);
 		}
