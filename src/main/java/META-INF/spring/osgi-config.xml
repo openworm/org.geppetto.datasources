@@ -39,6 +39,13 @@
 	<aop:scoped-proxy proxy-target-class="false"/>
 	</bean>
 	
+	<osgi:service id="SolrQueryDataSourceExporter" ref="solrqueryDataSource"
+		interface="org.geppetto.core.datasources.IDataSourceService">
+	</osgi:service>
+	<bean id="solrqueryDataSource" scope="prototype" class="org.geppetto.datasources.solr.SOLRdataSourceService">
+	<aop:scoped-proxy proxy-target-class="false"/>
+	</bean>
+	
 	<bean id="eventListenerBean" class="org.geppetto.core.services.registry.ApplicationListenerBean" />
 	
 </beans>
