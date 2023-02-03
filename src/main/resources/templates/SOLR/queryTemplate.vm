@@ -4,7 +4,6 @@
   "qf": "id",
   "indent": "true",
   "start": "0",
-  "pf":"true",
-  "rows": "10000",
+  "rows": "1",
   "wt": "json",
 }

@@ -13,7 +13,7 @@ public class SOLRdataSourceService extends ADataSourceService
 
 	public SOLRdataSourceService()
 	{
-		super("/templates/neo4j/queryTemplate.vm");
+		super("/templates/SOLR/queryTemplate.vm");
 	}
 
 	
