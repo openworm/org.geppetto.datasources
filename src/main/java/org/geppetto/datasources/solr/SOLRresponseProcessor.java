@@ -30,27 +30,28 @@ public class SOLRresponseProcessor implements IQueryResponseProcessor
 	public QueryResults processResponse(Map<String, Object> response)
 	{
 		QueryResults results = DatasourcesFactory.eINSTANCE.createQueryResults();
-		if(((Integer) ((Map<String, Object>) response.get("response")).get("numFound")) > 0)
+		Map<String, Object> data = (Map<String, Object>) response.get("response");
+		double numFound =  (double)data.get("numFound");
+		if(numFound > 0)
 		{
 			Set<String> headers = new HashSet<String>();
 			String queryName = null;
 			results.getResults().clear();
-			List<Map<String, Object>> data = (List<Map<String, Object>>) ((List) ((Map<String, Object>) ((List) response.get("response")).get(0)).get("data"));
-			for(Map<String, Object> rowObject : data)
-			{
-				QueryResult resultRow = DatasourcesFactory.eINSTANCE.createQueryResult();
-				if (queryName == null) {
-					Set<String> keySet = rowObject.keySet();
-					keySet.remove("id");
-					keySet.remove("_version_");
-					queryName = keySet.toString();
-				}
-				if (headers.size() < 1) {
-					headers.add("JSON");
-				}
-				resultRow.getValues().add((String) rowObject.get(queryName));
-				results.getResults().add(resultRow);
+			List<Object> rowObject = (List<Object>) data.get("docs");
+			Object terminfo = rowObject.get(0);
+
+			QueryResult resultRow = DatasourcesFactory.eINSTANCE.createQueryResult();
+			if (queryName == null) {
+				Set<String> keySet = data.keySet();
+				keySet.remove("id");
+				keySet.remove("_version_");
+				queryName = keySet.toString();
 			}
+			if (headers.size() < 1) {
+				headers.add("JSON");
+			}
+			resultRow.getValues().add(terminfo);
+			results.getResults().add(resultRow);
 			results.getHeader().addAll(headers);
 		}
 		else

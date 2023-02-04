@@ -1,9 +1,3 @@
 {
-  $QUERY,
-  "defType": "edismax",
-  "qf": "id",
-  "indent": "true",
-  "start": "0",
-  "rows": "1",
-  "wt": "json",
+  $QUERY
 }
