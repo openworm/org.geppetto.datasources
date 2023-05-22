@@ -28,13 +28,18 @@ import com.google.gson.JsonParser;
  */
 public class SOLRresponseProcessor implements IQueryResponseProcessor
 {
+	// This class is used to process the response from SOLR. It is called from the SOLRQuery class.
+	// The response is passed in as a Map<String, Object> and the results are returned as a QueryResults object.
+	// This class creates the QueryResults object and adds rows to it, one row for each object in the response.
+	// Each row is a QueryResult object that contains a list of values (objects).
+	// Each value is a field in the SOLR response. 
+	// The headers for the QueryResults object are also created here.
+	// The headers are the field names in the SOLR response.
+	// The headers are added to the QueryResults object.
+	// The QueryResults object is returned to the caller.
+	// If the response is empty, the QueryResults object is empty and the headers are empty.
+	// This class is used by the SOLRQuery class.
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.geppetto.datasources.IQueryResponseProcessor#processResponse(java.lang.String)
-	 */
-	@Override
 	public QueryResults processResponse(Map<String, Object> response)
 	{
 		QueryResults results = DatasourcesFactory.eINSTANCE.createQueryResults();
@@ -42,8 +47,6 @@ public class SOLRresponseProcessor implements IQueryResponseProcessor
 		double numFound =  (double)data.get("numFound");
 		if(numFound > 0)
 		{
-			List<String> headers = new ArrayList<String>();
-			String queryName = null;
 			results.getResults().clear();
 			List<Object> rowObject = (List<Object>) data.get("docs");
 			Object terminfo = rowObject.get(0);
@@ -56,23 +59,9 @@ public class SOLRresponseProcessor implements IQueryResponseProcessor
 			jsonFormat = (JsonObject) parser.parse(json);
 			
 			QueryResult resultRow = DatasourcesFactory.eINSTANCE.createQueryResult();
-			if (queryName == null) {
-				Set<String> keySet = data.keySet();
-				keySet.remove("id");
-				keySet.remove("_version_");
-				queryName = keySet.toString();
-			}
-			if (headers.size() < 1) {
-				Set<Entry<String, JsonElement>> keySet = jsonFormat.entrySet();	
-				
-				for (Entry<String, JsonElement> entry : keySet) {
-					headers.add(entry.getKey());
-					JsonElement obj = entry.getValue();
-					resultRow.getValues().add(obj);
-				}
-			}
+			resultRow.getValues().add(jsonFormat);
 			results.getResults().add(resultRow);
-			results.getHeader().addAll(headers);
+			results.getHeader().add("term_info");
 		}
 		else
 		{
@@ -80,5 +69,4 @@ public class SOLRresponseProcessor implements IQueryResponseProcessor
 		}
 		return results;
 	}
-
 }
