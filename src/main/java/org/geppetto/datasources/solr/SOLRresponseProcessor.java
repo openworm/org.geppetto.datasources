@@ -49,23 +49,44 @@ public class SOLRresponseProcessor implements IQueryResponseProcessor
 		{
 			results.getResults().clear();
 			List<Object> rowObject = (List<Object>) data.get("docs");
-			Object terminfo = rowObject.get(0);
 			Gson gsonObj = new Gson();
-			String jsonStr = gsonObj.toJson(terminfo);
 			JsonParser parser = new JsonParser();
-			JsonObject jsonFormat = (JsonObject) parser.parse(jsonStr);
-			JsonArray termInfo = (JsonArray) jsonFormat.get("term_info");
-			String json = termInfo.get(0).getAsString();
-			jsonFormat = (JsonObject) parser.parse(json);
-			
-			QueryResult resultRow = DatasourcesFactory.eINSTANCE.createQueryResult();
-			resultRow.getValues().add(jsonFormat);
-			results.getResults().add(resultRow);
-			results.getHeader().add("term_info");
+
+			for(Object obj : rowObject)
+			{
+				String jsonStr = gsonObj.toJson(obj);
+				JsonObject jsonFormat = (JsonObject) parser.parse(jsonStr);
+
+				QueryResult resultRow = DatasourcesFactory.eINSTANCE.createQueryResult();
+				for(Entry<String, JsonElement> entry : jsonFormat.entrySet())
+				{
+					String key = entry.getKey();
+					JsonElement value = entry.getValue();
+
+					if(value.isJsonArray())
+					{
+						JsonArray jsonArray = value.getAsJsonArray();
+						for(JsonElement element : jsonArray)
+						{
+							resultRow.getValues().add(element.getAsJsonObject());
+						}
+					}
+					else
+					{
+						resultRow.getValues().add(value.getAsJsonObject());
+					}
+
+					if(!results.getHeader().contains(key))
+					{
+						results.getHeader().add(key);
+					}
+				}
+				results.getResults().add(resultRow);
+			}
 		}
 		else
 		{
-			// TODO: report reponse to log
+			// TODO: report response to log
 		}
 		return results;
 	}
