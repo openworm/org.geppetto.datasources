@@ -68,12 +68,25 @@ public class SOLRresponseProcessor implements IQueryResponseProcessor
 						JsonArray jsonArray = value.getAsJsonArray();
 						for(JsonElement element : jsonArray)
 						{
-							resultRow.getValues().add(element.getAsJsonObject());
+							if(element.isJsonObject())
+							{
+								resultRow.getValues().add(element.getAsJsonObject());
+							}
+							else
+							{
+								// Handle non-JsonObject elements
+								System.out.println("Non-JsonObject element in array: " + element);
+							}
 						}
+					}
+					else if(value.isJsonObject())
+					{
+						resultRow.getValues().add(value.getAsJsonObject());
 					}
 					else
 					{
-						resultRow.getValues().add(value.getAsJsonObject());
+						// Handle non-JsonObject elements
+						System.out.println("Non-JsonObject element: " + value);
 					}
 
 					if(!results.getHeader().contains(key))
