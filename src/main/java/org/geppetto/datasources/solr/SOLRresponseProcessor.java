@@ -74,8 +74,8 @@ public class SOLRresponseProcessor implements IQueryResponseProcessor
 							}
 							else
 							{
-								// Handle non-JsonObject elements
-								System.out.println("Non-JsonObject element in array: " + element);
+								String serializedJson = element.getAsString();
+								resultRow.getValues().add(parser.parse(serializedJson).getAsJsonObject());
 							}
 						}
 					}
