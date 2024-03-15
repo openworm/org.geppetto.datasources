@@ -96,9 +96,7 @@ public class ExecuteMultipleQueriesVisitor extends DatasourcesSwitch<Object>
 		List<String> resultsIDs = new ArrayList<String>();
 		if(!results.getHeader().contains(ID))
 		{
-			//throw new GeppettoDataSourceException("The queries don't have an ID field");
-			// On missing ID data simply return an empty list:
-			return resultsIDs;
+			throw new GeppettoDataSourceException("The queries don't have an ID field");
 		}
 
 		int baseId = results.getHeader().indexOf(ID);
