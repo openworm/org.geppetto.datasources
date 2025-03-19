@@ -15,6 +15,7 @@ import org.geppetto.core.datasources.QueryChecker;
 import org.geppetto.core.datasources.VelocityUtils;
 import org.geppetto.core.model.GeppettoModelAccess;
 import org.geppetto.core.services.ServiceCreator;
+import org.geppetto.datasources.solr.SOLRdataSourceService;
 import org.geppetto.model.datasources.AQueryResult;
 import org.geppetto.model.datasources.CompoundQuery;
 import org.geppetto.model.datasources.CompoundRefQuery;
