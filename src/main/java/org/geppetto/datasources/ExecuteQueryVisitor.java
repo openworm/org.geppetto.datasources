@@ -1,4 +1,3 @@
-
 package org.geppetto.datasources;
 
 import java.util.HashMap;
@@ -186,6 +185,10 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 
 					processedQueryString = VelocityUtils.processTemplate(dataSourceService.getTemplate(), properties);
 
+					if(dataSourceService instanceof SOLRdataSourceService) {
+					    ((SOLRdataSourceService)dataSourceService).debugQuery(processedQueryString, url);
+					}
+
 					String response = null;
 					switch(dataSourceService.getConnectionType())
 					{
@@ -198,6 +201,10 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 					}
 
 					processResponse(response, dataSourceService);
+
+					if(dataSourceService instanceof SOLRdataSourceService) {
+					    System.out.println("SOLR Raw Response: " + response);
+					}
 				}
 			}
 			catch(GeppettoDataSourceException e)

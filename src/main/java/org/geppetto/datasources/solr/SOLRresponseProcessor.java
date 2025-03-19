@@ -40,8 +40,10 @@ public class SOLRresponseProcessor implements IQueryResponseProcessor
 	// If the response is empty, the QueryResults object is empty and the headers are empty.
 	// This class is used by the SOLRQuery class.
 
+	@Override
 	public QueryResults processResponse(Map<String, Object> response)
 	{
+		System.out.println("Processing SOLR response: " + response);
 		QueryResults results = DatasourcesFactory.eINSTANCE.createQueryResults();
 		Map<String, Object> data = (Map<String, Object>) response.get("response");
 		double numFound =  (double)data.get("numFound");
@@ -101,6 +103,7 @@ public class SOLRresponseProcessor implements IQueryResponseProcessor
 		{
 			// TODO: report response to log
 		}
+		System.out.println("SOLR Processed Results: " + results.getResults().size() + " rows");
 		return results;
 	}
 }
