@@ -3,6 +3,7 @@
  */
 package org.geppetto.datasources;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.geppetto.core.datasources.IQueryProcessor;
@@ -16,6 +17,8 @@ import org.geppetto.core.services.registry.ServicesRegistry;
  */
 public abstract class AQueryProcessor implements IQueryProcessor
 {
+
+	private Map<String, Object> outputMap = new HashMap<>();
 
 	@Override
 	public void registerGeppettoService() throws Exception
@@ -49,7 +52,7 @@ public abstract class AQueryProcessor implements IQueryProcessor
 	@Override
 	public Map<String, Object> getProcessingOutputMap()
 	{
-		return null;
+		return outputMap;
 	}
 
 }
