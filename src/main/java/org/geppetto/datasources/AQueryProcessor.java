@@ -19,6 +19,7 @@ public abstract class AQueryProcessor implements IQueryProcessor
 {
 
 	private Map<String, Object> outputMap = new HashMap<>();
+    protected boolean debug = false; // Add debug flag
 
 	@Override
 	public void registerGeppettoService() throws Exception
@@ -54,7 +55,7 @@ public abstract class AQueryProcessor implements IQueryProcessor
 	{
 		if (debug) {
             System.out.println("Processing output map contents from " + this.getClass().getName());
-            for (Map.Entry<String, Object> entry : processingOutputMap.entrySet()) {
+            for (Map.Entry<String, Object> entry : outputMap.entrySet()) {
                 System.out.println(entry.getKey() + " = " + entry.getValue());
             }
         }
