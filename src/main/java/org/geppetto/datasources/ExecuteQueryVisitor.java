@@ -48,6 +48,8 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 
 	private Variable variable;
 
+	private Map<String, Object> processingOutputMap = new HashMap<String, Object>();
+
 	private GeppettoModelAccess geppettoModelAccess;
 
 	private int resultsCount = -1;
