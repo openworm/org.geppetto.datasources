@@ -182,6 +182,27 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 					properties.put(ID, getVariable().getId());
 					properties.put("QUERY", queryString);
 
+					if (processingOutputMap == {}) {
+						try
+						{
+							IQueryProcessor queryProcessor = (IQueryProcessor) ServiceCreator.getNewServiceInstance(query.getQueryProcessorId());
+							this.results = queryProcessor.process(query, getDataSource(query), getVariable(), getResults(), geppettoModelAccess);
+							System.out.println("Calling query processor: " + queryProcessor.getClass().getName());
+							this.processingOutputMap = queryProcessor.getProcessingOutputMap();
+							for (Entry<String, Object> entry : processingOutputMap.entrySet()) {
+								System.out.println("Key: " + entry.getKey() + " Value: " + entry.getValue());
+							}
+						}
+						catch(GeppettoInitializationException e)
+						{
+							return new GeppettoVisitingException(e);
+						}
+						catch(GeppettoDataSourceException e)
+						{
+							return new GeppettoVisitingException(e);
+						}
+					}
+
 					if(processingOutputMap != null)
 					{
 						System.out.println("Processing output map: " + processingOutputMap);
