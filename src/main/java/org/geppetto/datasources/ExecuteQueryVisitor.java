@@ -181,29 +181,25 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 					}
 
 					Map<String, Object> properties = new HashMap<String, Object>();
-					properties.put(ID, getVariable().getId());
-					properties.put("QUERY", queryString);
+                    properties.put(ID, getVariable().getId());
+                    properties.put("QUERY", queryString);
 
-					if (processingOutputMap == {}) {
-						try
-						{
-							IQueryProcessor queryProcessor = (IQueryProcessor) ServiceCreator.getNewServiceInstance(query.getQueryProcessorId());
-							this.results = queryProcessor.process(query, getDataSource(query), getVariable(), getResults(), geppettoModelAccess);
-							System.out.println("Calling query processor: " + queryProcessor.getClass().getName());
-							this.processingOutputMap = queryProcessor.getProcessingOutputMap();
-							for (Entry<String, Object> entry : processingOutputMap.entrySet()) {
-								System.out.println("Key: " + entry.getKey() + " Value: " + entry.getValue());
-							}
-						}
-						catch(GeppettoInitializationException e)
-						{
-							return new GeppettoVisitingException(e);
-						}
-						catch(GeppettoDataSourceException e)
-						{
-							return new GeppettoVisitingException(e);
-						}
-					}
+                    // Check if processing output map is empty
+                    if (processingOutputMap.isEmpty()) {
+                        try {
+                            IQueryProcessor queryProcessor = (IQueryProcessor) ServiceCreator.getNewServiceInstance(query.getQueryProcessorId());
+                            this.results = queryProcessor.process(query, getDataSource(query), getVariable(), getResults(), geppettoModelAccess);
+                            System.out.println("Calling query processor: " + queryProcessor.getClass().getName());
+                            this.processingOutputMap = queryProcessor.getProcessingOutputMap();
+                            for (Entry<String, Object> entry : processingOutputMap.entrySet()) {
+                                System.out.println("Key: " + entry.getKey() + " Value: " + entry.getValue());
+                            }
+                        } catch(GeppettoInitializationException e) {
+                            return new GeppettoVisitingException(e);
+                        } catch(GeppettoDataSourceException e) {
+                            return new GeppettoVisitingException(e);
+                        }
+                    }
 
 					if(processingOutputMap != null)
 					{
