@@ -33,7 +33,7 @@ public class Neo4jResponseProcessor implements IQueryResponseProcessor
 
 			results.getHeader().addAll(headers);
 
-			results.getResults().clear();
+			// results.getResults().clear();
 			List<Map<String, Object>> data = (List<Map<String, Object>>) ((List) ((Map<String, Object>) ((List) response.get("results")).get(0)).get("data"));
 			for(Map<String, Object> rowObject : data)
 			{
