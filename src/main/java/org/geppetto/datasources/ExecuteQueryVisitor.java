@@ -81,6 +81,12 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 		{
 			if(QueryChecker.check(query, getVariable()))
 			{
+
+				// Check if processing output map is empty
+				if (processingOutputMap.isEmpty()) {
+					System.out.println("ProcessQuery: " + query.getName());
+				}
+
 				try
 				{
 					IQueryProcessor queryProcessor = (IQueryProcessor) ServiceCreator.getNewServiceInstance(query.getQueryProcessorId());
