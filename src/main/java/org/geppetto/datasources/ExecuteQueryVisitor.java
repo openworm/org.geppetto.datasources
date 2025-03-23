@@ -149,11 +149,6 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 	{
 		if(!count || (count && compoundQuery.isRunForCount()))
 		{
-			ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(variable, geppettoModelAccess);
-			runQueryVisitor.processingOutputMap.putAll(processingOutputMap);
-
-			System.out.println("CompoundRefQuery: " + compoundQuery.getName());
-			
 			for(Query query : compoundQuery.getQueryChain())
 			{
 				this.doSwitch(query);
