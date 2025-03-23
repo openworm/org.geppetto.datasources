@@ -186,10 +186,22 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 
                     // Check if processing output map is empty
                     if (processingOutputMap.isEmpty()) {
-                        System.out.println("SimpleQuery: " + query.getName());
+                        try {
+                            IQueryProcessor queryProcessor = (IQueryProcessor) ServiceCreator.getNewServiceInstance(query.getQueryProcessorId());
+                            this.results = queryProcessor.process(query, getDataSource(query), getVariable(), getResults(), geppettoModelAccess);
+                            System.out.println("Calling query processor: " + queryProcessor.getClass().getName());
+                            this.processingOutputMap = queryProcessor.getProcessingOutputMap();
+                            for (Entry<String, Object> entry : processingOutputMap.entrySet()) {
+                                System.out.println("Key: " + entry.getKey() + " Value: " + entry.getValue());
+                            }
+                        } catch(GeppettoInitializationException e) {
+                            return new GeppettoVisitingException(e);
+                        } catch(GeppettoDataSourceException e) {
+                            return new GeppettoVisitingException(e);
+                        }
                     }
 
-					if(processingOutputMap != null && !processingOutputMap.isEmpty())
+					if(processingOutputMap != null)
 					{
 						System.out.println("Processing output map: " + processingOutputMap);
 						properties.putAll(processingOutputMap);
