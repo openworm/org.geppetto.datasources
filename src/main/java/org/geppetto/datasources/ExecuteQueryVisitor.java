@@ -82,7 +82,10 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 			if(QueryChecker.check(query, getVariable()))
 			{
 
-				System.out.println("ProcessQuery: " + query.getName());
+				// Check if processing output map is empty
+				if (processingOutputMap.isEmpty()) {
+					System.out.println("ProcessQuery: " + query.getName());
+				}
 
 				try
 				{
@@ -119,8 +122,6 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 		{
 			ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(variable, geppettoModelAccess);
 			runQueryVisitor.processingOutputMap.putAll(processingOutputMap);
-
-			System.out.println("CompoundQuery: " + query.getName());
 
 			try
 			{
@@ -189,7 +190,10 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
                     properties.put(ID, getVariable().getId());
                     properties.put("QUERY", queryString);
 
-                    System.out.println("SimpleQuery: " + query.getName());
+                    // Check if processing output map is empty
+                    if (processingOutputMap.isEmpty()) {
+                        System.out.println("SimpleQuery: " + query.getName());
+                    }
 
 					if(processingOutputMap != null && !processingOutputMap.isEmpty())
 					{
