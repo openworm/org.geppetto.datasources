@@ -1,4 +1,3 @@
-
 package org.geppetto.datasources;
 
 import java.util.ArrayList;
@@ -41,6 +40,10 @@ public class ExecuteMultipleQueriesVisitor extends DatasourcesSwitch<Object>
 	private Map<String, List<String>> cachedIds;
 
 	private static final String ID = "ID";
+
+	private int pageSize = -1;
+	private int page = 0;
+	private boolean paginated = false;
 
 	public ExecuteMultipleQueriesVisitor(GeppettoModelAccess geppettoModelAccess, Map<String, QueryResults> cachedResults, Map<String, List<String>> cachedIds)
 	{
@@ -233,6 +236,21 @@ public class ExecuteMultipleQueriesVisitor extends DatasourcesSwitch<Object>
 	public int getCount() throws GeppettoDataSourceException
 	{
 		return getResults().getResults().size();
+	}
+
+	/**
+	 * Enable pagination with specified page size
+	 */
+	public void enablePagination(int pageSize) {
+	    this.paginated = true;
+	    this.pageSize = pageSize;
+	}
+
+	/**
+	 * Set the current page to retrieve
+	 */
+	public void setPage(int page) {
+	    this.page = page;
 	}
 
 }
