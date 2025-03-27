@@ -30,6 +30,8 @@ import org.geppetto.model.util.GeppettoModelTraversal;
 import org.geppetto.model.util.GeppettoVisitingException;
 import org.geppetto.model.variables.Variable;
 import com.google.gson.JsonSyntaxException;
+import org.geppetto.datasources.neo4j.Neo4jDataSourceService;
+import org.geppetto.datasources.solr.SOLRdataSourceService;
 
 /**
  * @author matteocantarelli
@@ -58,6 +60,8 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
     private boolean paginated = false;
     private int totalResults = 0;
     private boolean hasMorePages = false;
+
+    private Query originalQuery; // Add this field to store the original query
 
 	public ExecuteQueryVisitor(Variable variable, GeppettoModelAccess geppettoModelAccess)
 	{
@@ -161,6 +165,9 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 	@Override
 	public Object caseSimpleQuery(SimpleQuery query)
 	{
+		// Store the original query at the beginning of this method
+		this.originalQuery = query;
+		
 		if(!count || (count && query.isRunForCount()))
 		{
 			String processedQueryString = "";
@@ -502,6 +509,10 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
     }
 
     public void streamResults(QueryResultConsumer consumer) throws GeppettoDataSourceException {
+        if (originalQuery == null) {
+            throw new GeppettoDataSourceException("No query to execute for streaming");
+        }
+        
         int page = 0;
         boolean hasMore = true;
         
@@ -511,7 +522,7 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
             this.mergedResults = DatasourcesFactory.eINSTANCE.createQueryResults();
             
             // Execute query for current page
-            doSwitch(theOriginalQuery);  // You'll need to store the original query
+            doSwitch(originalQuery);  // Use originalQuery instead of theOriginalQuery
             
             // Process this page of results
             if(results != null && !results.getResults().isEmpty()) {
