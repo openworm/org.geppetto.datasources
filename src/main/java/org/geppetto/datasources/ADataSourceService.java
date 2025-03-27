@@ -1,4 +1,3 @@
-
 package org.geppetto.datasources;
 
 import java.util.ArrayList;
@@ -82,6 +81,25 @@ public abstract class ADataSourceService extends AService implements IDataSource
 		try
 		{
 			ExecuteMultipleQueriesVisitor executeMultipleQueriesVisitor = new ExecuteMultipleQueriesVisitor(geppettoModelAccess, cachedResults, cachedIds);
+			GeppettoModelTraversal.apply((EList) queries, executeMultipleQueriesVisitor);
+			return executeMultipleQueriesVisitor.getResults();
+		}
+		catch(GeppettoVisitingException e)
+		{
+			throw new GeppettoDataSourceException(e);
+		}
+	}
+
+	@Override
+	public QueryResults execute(List<RunnableQuery> queries, int pageSize, int page) throws GeppettoDataSourceException
+	{
+		try
+		{
+			ExecuteMultipleQueriesVisitor executeMultipleQueriesVisitor = new ExecuteMultipleQueriesVisitor(geppettoModelAccess, cachedResults, cachedIds);
+			if(pageSize > 0) {
+				executeMultipleQueriesVisitor.enablePagination(pageSize);
+				executeMultipleQueriesVisitor.setPage(page);
+			}
 			GeppettoModelTraversal.apply((EList) queries, executeMultipleQueriesVisitor);
 			return executeMultipleQueriesVisitor.getResults();
 		}

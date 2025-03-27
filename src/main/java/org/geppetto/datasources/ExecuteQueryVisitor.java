@@ -1,4 +1,3 @@
-
 package org.geppetto.datasources;
 
 import java.util.HashMap;
@@ -52,6 +51,13 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 	private GeppettoModelAccess geppettoModelAccess;
 
 	private int resultsCount = -1;
+
+    // Add these fields
+    private int pageSize = 1000; // Default page size
+    private int currentPage = 0;
+    private boolean paginated = false;
+    private int totalResults = 0;
+    private boolean hasMorePages = false;
 
 	public ExecuteQueryVisitor(Variable variable, GeppettoModelAccess geppettoModelAccess)
 	{
@@ -173,6 +179,11 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 					else
 					{
 						queryString = query.getQuery();
+						// Add pagination parameters if enabled
+						if(paginated) {
+							// Modify query string based on data source type
+							queryString = addPaginationToQuery(queryString, dataSourceService);
+						}
 					}
 
 					Map<String, Object> properties = new HashMap<String, Object>();
@@ -240,6 +251,19 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 			{
 				Map<String, Object> responseMap = JSONUtility.getAsMap(response);
 				results = dataSourceService.getQueryResponseProcessor().processResponse(responseMap);
+				
+				// Update pagination information
+				if(paginated && dataSourceService instanceof SOLRdataSourceService) {
+					// For SOLR
+					if(responseMap.containsKey("response")) {
+						Map<String, Object> respObj = (Map<String, Object>)responseMap.get("response");
+						if(respObj.containsKey("numFound")) {
+							totalResults = ((Number)respObj.get("numFound")).intValue();
+							hasMorePages = (currentPage + 1) * pageSize < totalResults;
+						}
+					}
+				}
+				// Add similar handling for other data sources
 			}
 		}catch (JsonSyntaxException e){
 			System.out.println("JsonSyntaxException handling: " + response);
@@ -410,5 +434,99 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 
 	}
 
+    /**
+     * Add pagination parameters to query based on data source type
+     */
+    private String addPaginationToQuery(String query, ADataSourceService dataSourceService) {
+        String paginatedQuery = query;
+        
+        // Different data sources might need different pagination formats
+        if(dataSourceService instanceof Neo4jDataSourceService) {
+            // Add Neo4j-specific pagination
+            paginatedQuery += " SKIP " + (currentPage * pageSize) + " LIMIT " + pageSize;
+        } else if(dataSourceService instanceof SOLRdataSourceService) {
+            // Add SOLR-specific pagination
+            if(paginatedQuery.contains("start=")) {
+                // Replace existing start parameter
+                paginatedQuery = paginatedQuery.replaceAll("start=\\d+", "start=" + (currentPage * pageSize));
+            } else {
+                paginatedQuery += "&start=" + (currentPage * pageSize);
+            }
+            
+            if(paginatedQuery.contains("rows=")) {
+                // Replace existing rows parameter
+                paginatedQuery = paginatedQuery.replaceAll("rows=\\d+", "rows=" + pageSize);
+            } else {
+                paginatedQuery += "&rows=" + pageSize;
+            }
+        }
+        // Add similar conditions for other data source types
+        
+        return paginatedQuery;
+    }
+
+    /**
+     * Enable pagination with specified page size
+     */
+    public void enablePagination(int pageSize) {
+        this.paginated = true;
+        this.pageSize = pageSize;
+    }
+
+    /**
+     * Set the current page to retrieve
+     */
+    public void setPage(int page) {
+        this.currentPage = page;
+    }
+
+    /**
+     * Get the total number of results
+     */
+    public int getTotalResults() {
+        return totalResults;
+    }
+
+    /**
+     * Check if more pages are available
+     */
+    public boolean hasMorePages() {
+        return hasMorePages;
+    }
+
+    /**
+     * Get total number of pages
+     */
+    public int getTotalPages() {
+        return (totalResults + pageSize - 1) / pageSize;
+    }
+
+    public void streamResults(QueryResultConsumer consumer) throws GeppettoDataSourceException {
+        int page = 0;
+        boolean hasMore = true;
+        
+        while(hasMore) {
+            setPage(page);
+            this.results = null;  // Reset results
+            this.mergedResults = DatasourcesFactory.eINSTANCE.createQueryResults();
+            
+            // Execute query for current page
+            doSwitch(theOriginalQuery);  // You'll need to store the original query
+            
+            // Process this page of results
+            if(results != null && !results.getResults().isEmpty()) {
+                consumer.processResults(results);
+            } else {
+                hasMore = false;
+            }
+            
+            hasMore = hasMore && hasMorePages;
+            page++;
+        }
+    }
+
+    public interface QueryResultConsumer {
+        void processResults(QueryResults pageResults) throws GeppettoDataSourceException;
+    }
 
 }
