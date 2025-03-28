@@ -1,4 +1,3 @@
-
 package org.geppetto.datasources;
 
 import java.util.HashMap;
@@ -258,6 +257,19 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 		// processedResults to results
 		if(results != null)
 		{
+			// Check if either result set is empty
+			if(results.getResults().isEmpty())
+			{
+				results = processedResults;
+				return;
+			}
+			
+			if(processedResults.getResults().isEmpty())
+			{
+				// Nothing to merge
+				return;
+			}
+			
 			if(!results.getHeader().contains(ID) || !processedResults.getHeader().contains(ID))
 			{
 				throw new GeppettoDataSourceException("Cannot merge without an ID in the results");
@@ -297,73 +309,76 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 			
 			int lastId = mergedResults.getHeader().indexOf(ID);
 			
-			for(String id : idsList) {
-				// This is the real deal, here we iterate all the ids and for each id
-				Boolean resultAdded = false;
-				SerializableQueryResult newRecord = null;
-				for(AQueryResult result : results.getResults()) {
-					// if the id is found in one of the records contained in results then we set newRecord
-					// to the result found
-					if(((SerializableQueryResult) result).getValues().get(baseId).equals(id)) {
-						newRecord = (SerializableQueryResult) result;
-					}
-				}
-
-				// Then we check the same id in processedResults
-				for(AQueryResult result : processedResults.getResults()) {
-					// If this is found 
-					if(((SerializableQueryResult) result).getValues().get(mergeId).equals(id)) {
-						// and was not found in the results iteration, then newRecord will be set to this result
-						if(newRecord == null) {
+			// Only proceed with merge if we have IDs to process
+			if(!idsList.isEmpty())
+			{
+				for(String id : idsList) {
+					// This is the real deal, here we iterate all the ids and for each id
+					Boolean resultAdded = false;
+					SerializableQueryResult newRecord = null;
+					for(AQueryResult result : results.getResults()) {
+						// if the id is found in one of the records contained in results then we set newRecord
+						// to the result found
+						if(((SerializableQueryResult) result).getValues().get(baseId).equals(id)) {
 							newRecord = (SerializableQueryResult) result;
-						// differently we iterate this results per column and we add whatever is present here
-						// that was not present in the previous check, keep in mind that we overwrite also the
-						// columns that were already present
-						} else {
-							for(String column : processedResults.getHeader())
-							{
-								if(!column.equals(ID))
+						}
+					}
+
+					// Then we check the same id in processedResults
+					for(AQueryResult result : processedResults.getResults()) {
+						// If this is found 
+						if(((SerializableQueryResult) result).getValues().get(mergeId).equals(id)) {
+							// and was not found in the results iteration, then newRecord will be set to this result
+							if(newRecord == null) {
+								newRecord = (SerializableQueryResult) result;
+							// differently we iterate this results per column and we add whatever is present here
+							// that was not present in the previous check, keep in mind that we overwrite also the
+							// columns that were already present
+							} else {
+								for(String column : processedResults.getHeader())
 								{
-									int columnId = processedResults.getHeader().indexOf(column);
-									((SerializableQueryResult) newRecord).getValues().add(((SerializableQueryResult) result).getValues().get(columnId));
+									if(!column.equals(ID))
+									{
+										int columnId = processedResults.getHeader().indexOf(column);
+										((SerializableQueryResult) newRecord).getValues().add(((SerializableQueryResult) result).getValues().get(columnId));
+									}
 								}
+								break;
 							}
+						}
+					}
+					
+					// Finally we check if this id is present also in mergedResults, that carry over all the results
+					// from previous queries/compound, if this was already present then we overwrite all the
+					// previous informations with the coming one
+					for(AQueryResult result : mergedResults.getResults()) {
+						if((((SerializableQueryResult) result).getValues().get(lastId).equals(id)) && newRecord != null) {
+							for(String column : mergedResults.getHeader())
+								{
+									if(!column.equals(ID))
+									{
+										int columnId = mergedResults.getHeader().indexOf(column);
+										((SerializableQueryResult) result).getValues().add(((SerializableQueryResult) newRecord).getValues().get(columnId));
+									}
+								}
+							resultAdded = true;
 							break;
 						}
 					}
-				}
-				
-				// Finally we check if this id is present also in mergedResults, that carry over all the results
-				// from previous queries/compound, if this was already present then we overwrite all the
-				// previous informations with the coming one
-				for(AQueryResult result : mergedResults.getResults()) {
-					if((((SerializableQueryResult) result).getValues().get(lastId).equals(id)) && newRecord != null) {
-						for(String column : mergedResults.getHeader())
-							{
-								if(!column.equals(ID))
-								{
-									int columnId = mergedResults.getHeader().indexOf(column);
-									((SerializableQueryResult) result).getValues().add(((SerializableQueryResult) newRecord).getValues().get(columnId));
-								}
-							}
-						resultAdded = true;
-						break;
+					
+					// Instead if the id was not present in mergedResult we simply add this record
+					if(!resultAdded && newRecord != null) { 
+						mergedResults.getResults().add(newRecord);
 					}
 				}
-				
-				// Instead if the id was not present in mergedResult we simply add this record
-				if(!resultAdded) { 
-					mergedResults.getResults().add(newRecord);
-				}
+				// Then we re-initialize results as mergedResults that contains all the results to pass to frontend
+				results = mergedResults;
 			}
-			// Then we re-initialize results as mergedResults that contains all the results to pass to frontend
-			results = mergedResults;
 		}
 		else
 		{
 			results = processedResults;
 		}
-
 	}
 
 	/**
