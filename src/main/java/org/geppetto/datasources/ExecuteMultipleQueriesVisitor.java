@@ -55,38 +55,60 @@ public class ExecuteMultipleQueriesVisitor extends DatasourcesSwitch<Object>
 	@Override
 	public Object caseRunnableQuery(RunnableQuery object)
 	{
-		try
-		{
+	    try
+	    {
+	        Variable variable = geppettoModelAccess.getPointer(object.getTargetVariablePath()).getElements().get(0).getVariable();
+	        Query query = geppettoModelAccess.getQuery(object.getQueryPath());
+	        String key = getKey(query, variable);
 
-			Variable variable = geppettoModelAccess.getPointer(object.getTargetVariablePath()).getElements().get(0).getVariable();
-			Query query = geppettoModelAccess.getQuery(object.getQueryPath());
-			String key = getKey(query, variable);
+	        System.out.println("Processing query with key: " + key);
+	        
+	        if(cachedResults.containsKey(key))
+	        {
+	            System.out.println("Cache HIT for query: " + key);
+	            QueryResults cachedResult = EcoreUtil.copy(cachedResults.get(key));
+	            results.put(cachedResult, object.getBooleanOperator());
+	            ids.put(cachedResult, new ArrayList<String>());
+	            ids.get(cachedResult).addAll(cachedIds.get(key));
+	            System.out.println("Retrieved " + (cachedIds.get(key) != null ? cachedIds.get(key).size() : "null") + " cached IDs");
+	        }
+	        else
+	        {
+	            System.out.println("Cache MISS for query: " + key);
+	            ExecuteQueryVisitor executeQueryVisitor = new ExecuteQueryVisitor(variable, geppettoModelAccess);
+	            executeQueryVisitor.doSwitch(query);
+	            
+	            try {
+	                List<String> resultIds = getIDs(executeQueryVisitor.getResults());
+	                System.out.println("Query execution complete. Results size: " + 
+	                    (executeQueryVisitor.getResults() != null ? executeQueryVisitor.getResults().getResults().size() : "null") + 
+	                    ", IDs extracted: " + (resultIds != null ? resultIds.size() : "null"));
+	                
+	                try {
+	                    cache(key, EcoreUtil.copy(executeQueryVisitor.getResults()), resultIds);
+	                    System.out.println("Successfully cached results for key: " + key);
+	                } catch (Exception e) {
+	                    System.out.println("ERROR caching results: " + e.getMessage());
+	                    e.printStackTrace();
+	                }
+	                
+	                results.put(executeQueryVisitor.getResults(), object.getBooleanOperator());
+	                ids.put(executeQueryVisitor.getResults(), new ArrayList<String>());
+	                ids.get(executeQueryVisitor.getResults()).addAll(resultIds);
+	            } catch (Exception e) {
+	                System.out.println("ERROR processing query results: " + e.getMessage());
+	                e.printStackTrace();
+	            }
+	        }
+	    }
+	    catch(GeppettoModelException | GeppettoDataSourceException e)
+	    {
+	        System.out.println("ERROR in caseRunnableQuery: " + e.getMessage());
+	        e.printStackTrace();
+	        return new GeppettoVisitingException(e);
+	    }
 
-			if(cachedResults.containsKey(key))
-			{
-				QueryResults cachedResult = EcoreUtil.copy(cachedResults.get(key));
-				results.put(cachedResult, object.getBooleanOperator());
-				ids.put(cachedResult, new ArrayList<String>());
-				ids.get(cachedResult).addAll(cachedIds.get(key));
-			}
-			else
-			{
-				ExecuteQueryVisitor executeQueryVisitor = new ExecuteQueryVisitor(variable, geppettoModelAccess);
-				executeQueryVisitor.doSwitch(query);
-				List<String> resultIds = getIDs(executeQueryVisitor.getResults());
-				cache(key, EcoreUtil.copy(executeQueryVisitor.getResults()), resultIds);
-				results.put(executeQueryVisitor.getResults(), object.getBooleanOperator());
-				ids.put(executeQueryVisitor.getResults(), new ArrayList<String>());
-				ids.get(executeQueryVisitor.getResults()).addAll(resultIds);
-			}
-
-		}
-		catch(GeppettoModelException | GeppettoDataSourceException e)
-		{
-			return new GeppettoVisitingException(e);
-		}
-
-		return super.caseRunnableQuery(object);
+	    return super.caseRunnableQuery(object);
 	}
 
 	/**
@@ -96,21 +118,48 @@ public class ExecuteMultipleQueriesVisitor extends DatasourcesSwitch<Object>
 	 */
 	private List<String> getIDs(QueryResults results) throws GeppettoDataSourceException
 	{
-		List<String> resultsIDs = new ArrayList<String>();
-		if(!results.getHeader().contains(ID))
-		{
-			//throw new GeppettoDataSourceException("The queries don't have an ID field");
-			// On missing ID data simply return an empty list:
-			return resultsIDs;
-		}
+	    List<String> resultsIDs = new ArrayList<String>();
+	    
+	    if (results == null) {
+	        System.out.println("WARNING: QueryResults is null in getIDs()");
+	        return resultsIDs;
+	    }
+	    
+	    if (results.getHeader() == null) {
+	        System.out.println("WARNING: Header is null in QueryResults");
+	        return resultsIDs;
+	    }
+	    
+	    System.out.println("Headers in results: " + String.join(", ", results.getHeader()));
+	    
+	    if(!results.getHeader().contains(ID))
+	    {
+	        System.out.println("WARNING: ID field not found in query results headers");
+	        return resultsIDs;
+	    }
 
-		int baseId = results.getHeader().indexOf(ID);
-
-		for(AQueryResult result : results.getResults())
-		{
-			resultsIDs.add(((SerializableQueryResult) result).getValues().get(baseId));
-		}
-		return resultsIDs;
+	    try {
+	        int baseId = results.getHeader().indexOf(ID);
+	        System.out.println("ID column index: " + baseId);
+	        
+	        for(AQueryResult result : results.getResults())
+	        {
+	            if (result instanceof SerializableQueryResult) {
+	                String id = ((SerializableQueryResult) result).getValues().get(baseId);
+	                resultsIDs.add(id);
+	            } else {
+	                System.out.println("WARNING: Result is not a SerializableQueryResult: " + 
+	                    (result != null ? result.getClass().getName() : "null"));
+	            }
+	        }
+	        
+	        System.out.println("Extracted " + resultsIDs.size() + " IDs from results");
+	    } catch (Exception e) {
+	        System.out.println("ERROR extracting IDs: " + e.getMessage());
+	        e.printStackTrace();
+	    }
+	    
+	    return resultsIDs;
 	}
 
 	/**
@@ -208,15 +257,33 @@ public class ExecuteMultipleQueriesVisitor extends DatasourcesSwitch<Object>
 	 */
 	private void cache(String key, QueryResults results, List<String> ids)
 	{
-		if(cachedResults.size() > 10)
-		{
-			cachedResults.remove(cachedResults.keySet().iterator().next());
-			cachedIds.remove(cachedIds.keySet().iterator().next());
-		}
-		cachedResults.put(key, results);
-		cachedIds.put(key, new ArrayList<String>());
-		cachedIds.get(key).addAll(ids);
-
+	    System.out.println("Caching results for key: " + key);
+	    System.out.println("Current cache size: " + cachedResults.size());
+	    
+	    if(cachedResults.size() > 10)
+	    {
+	        String removedKey = cachedResults.keySet().iterator().next();
+	        System.out.println("Cache full, removing oldest entry: " + removedKey);
+	        cachedResults.remove(removedKey);
+	        cachedIds.remove(removedKey);
+	    }
+	    
+	    try {
+	        cachedResults.put(key, results);
+	        cachedIds.put(key, new ArrayList<String>());
+	        
+	        if(ids != null) {
+	            System.out.println("Adding " + ids.size() + " IDs to cache");
+	            cachedIds.get(key).addAll(ids);
+	        } else {
+	            System.out.println("WARNING: IDs list is null");
+	        }
+	        
+	        System.out.println("Cache operation complete. New cache size: " + cachedResults.size());
+	    } catch (Exception e) {
+	        System.out.println("ERROR during cache operation: " + e.getMessage());
+	        e.printStackTrace();
+	    }
 	}
 
 	/**
