@@ -120,6 +120,13 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 				}
 			}
 		}
+		try {
+			return super.caseProcessQuery(query);
+		} catch (Exception e) {
+			System.out.println("DEBUG: Exception occurred in super.caseProcessQuery: " + e.getClass().getName() + ": " + e.getMessage());
+			e.printStackTrace();
+			return new GeppettoVisitingException(new GeppettoDataSourceException(e));
+		}
 		return super.caseProcessQuery(query);
 	}
 
@@ -131,25 +138,49 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 	@Override
 	public Object caseCompoundQuery(CompoundQuery query)
 	{
+		System.out.println("DEBUG: Entering caseCompoundQuery for query: " + query.getId());
 		if(!count || (count && query.isRunForCount()))
 		{
+			System.out.println("DEBUG: Creating new ExecuteQueryVisitor");
 			ExecuteQueryVisitor runQueryVisitor = new ExecuteQueryVisitor(variable, geppettoModelAccess);
+			
+			System.out.println("DEBUG: Copying processing output map");
 			runQueryVisitor.processingOutputMap.putAll(processingOutputMap);
 
 			try
 			{
+				System.out.println("DEBUG: Before applying GeppettoModelTraversal");
 				GeppettoModelTraversal.applyDirectChildrenOnly(query, runQueryVisitor);
+				System.out.println("DEBUG: After applying GeppettoModelTraversal");
+				
+				System.out.println("DEBUG: Before merging results");
 				mergeResults(runQueryVisitor.getResults());
+				System.out.println("DEBUG: After merging results");
 			}
 			catch(GeppettoVisitingException e)
 			{
+				System.out.println("DEBUG: Caught GeppettoVisitingException: " + e.getMessage());
+				e.printStackTrace();
 				return e;
 			}
 			catch(GeppettoDataSourceException e)
 			{
+				System.out.println("DEBUG: Caught GeppettoDataSourceException: " + e.getMessage());
+				e.printStackTrace();
 				return new GeppettoVisitingException(e);
 			}
+			catch(Exception e)
+			{
+				System.out.println("DEBUG: Caught unexpected exception: " + e.getClass().getName() + ": " + e.getMessage());
+				e.printStackTrace();
+				return new GeppettoVisitingException(new GeppettoDataSourceException(e));
+			}
 		}
+		else
+		{
+			System.out.println("DEBUG: Skipping query execution due to count flag");
+		}
+		System.out.println("DEBUG: Exiting caseCompoundQuery");
 		return super.caseCompoundQuery(query);
 	}
 
@@ -161,13 +192,30 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 	@Override
 	public Object caseCompoundRefQuery(CompoundRefQuery compoundQuery)
 	{
+		System.out.println("DEBUG: Entering caseCompoundRefQuery for query chain");
 		if(!count || (count && compoundQuery.isRunForCount()))
 		{
+			System.out.println("DEBUG: Processing query chain with " + compoundQuery.getQueryChain().size() + " queries");
+			int queryIndex = 0;
 			for(Query query : compoundQuery.getQueryChain())
 			{
-				this.doSwitch(query);
+				System.out.println("DEBUG: About to process query #" + (++queryIndex) + " in chain");
+				try {
+					this.doSwitch(query);
+					System.out.println("DEBUG: Successfully processed query #" + queryIndex);
+				} catch (Exception e) {
+					System.out.println("DEBUG: Exception while processing query #" + queryIndex + ": " + e.getMessage());
+					e.printStackTrace();
+					throw e; // Re-throw to maintain original behavior
+				}
 			}
+			System.out.println("DEBUG: Completed processing all queries in chain");
 		}
+		else
+		{
+			System.out.println("DEBUG: Skipping query chain execution due to count flag");
+		}
+		System.out.println("DEBUG: Exiting caseCompoundRefQuery");
 		return super.caseCompoundRefQuery(compoundQuery);
 	}
 
