@@ -346,12 +346,18 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 	 */
 	private void mergeResults(QueryResults processedResults) throws GeppettoDataSourceException
 	{
+		System.out.println("DEBUG: Entering mergeResults method");
 		// if this arrives from a first query results should be empty, so we automatically assign 
 		// processedResults to results
 		if(results != null)
 		{
+			System.out.println("DEBUG: Results not null, merging required");
+			
 			if(!results.getHeader().contains(ID) || !processedResults.getHeader().contains(ID))
 			{
+				System.out.println("DEBUG: ERROR - ID missing from headers. Results header has ID: " + 
+					results.getHeader().contains(ID) + ", ProcessedResults header has ID: " + 
+					processedResults.getHeader().contains(ID));
 				throw new GeppettoDataSourceException("Cannot merge without an ID in the results");
 			}
 			
@@ -360,102 +366,163 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 			// Extract the index of the id for each list of results
 			int baseId = results.getHeader().indexOf(ID);
 			int mergeId = processedResults.getHeader().indexOf(ID);
+			System.out.println("DEBUG: ID index in results: " + baseId + ", ID index in processedResults: " + mergeId);
 			
 			// add all the ids from results and processedResults to idsList, a Set that will contain all
 			// unique ids that we can iterate to do a merge of the data
+			System.out.println("DEBUG: Adding IDs from results, count: " + results.getResults().size());
 			for(AQueryResult result : results.getResults())
 			{
-				idsList.add(((SerializableQueryResult) result).getValues().get(baseId));
+				try {
+					String id = ((SerializableQueryResult) result).getValues().get(baseId);
+					idsList.add(id);
+					System.out.println("DEBUG: Added ID from results: " + id);
+				} catch (Exception e) {
+					System.out.println("DEBUG: Error adding ID from results: " + e.getMessage());
+					e.printStackTrace();
+				}
 			}
 			
+			System.out.println("DEBUG: Adding IDs from processedResults, count: " + processedResults.getResults().size());
 			for(AQueryResult result : processedResults.getResults())
 			{
-				idsList.add(((SerializableQueryResult) result).getValues().get(mergeId));
+				try {
+					String id = ((SerializableQueryResult) result).getValues().get(mergeId);
+					idsList.add(id);
+					System.out.println("DEBUG: Added ID from processedResults: " + id);
+				} catch (Exception e) {
+					System.out.println("DEBUG: Error adding ID from processedResults: " + e.getMessage());
+					e.printStackTrace();
+				}
 			}
+			System.out.println("DEBUG: Total unique IDs: " + idsList.size());
 
 			// Extract all the headers contained in results and processedResults and put all in mergedResults
+			System.out.println("DEBUG: Adding columns from processedResults to results");
 			for(String column : processedResults.getHeader())
 			{
 				if(!column.equals(ID))
 				{
+					System.out.println("DEBUG: Adding column to results: " + column);
 					results.getHeader().add(column);
 				}
 			}
 			
+			System.out.println("DEBUG: Adding columns from results to mergedResults");
 			for(String column : results.getHeader())
 			{
+				System.out.println("DEBUG: Adding column to mergedResults: " + column);
 				mergedResults.getHeader().add(column);
 			}
 			
 			int lastId = mergedResults.getHeader().indexOf(ID);
+			System.out.println("DEBUG: ID index in mergedResults: " + lastId);
 			
+			System.out.println("DEBUG: Beginning to process each ID");
 			for(String id : idsList) {
+				System.out.println("DEBUG: Processing ID: " + id);
 				// This is the real deal, here we iterate all the ids and for each id
 				Boolean resultAdded = false;
 				SerializableQueryResult newRecord = null;
+				
+				System.out.println("DEBUG: Searching for ID in results");
 				for(AQueryResult result : results.getResults()) {
 					// if the id is found in one of the records contained in results then we set newRecord
 					// to the result found
-					if(((SerializableQueryResult) result).getValues().get(baseId).equals(id)) {
-						newRecord = (SerializableQueryResult) result;
+					try {
+						if(((SerializableQueryResult) result).getValues().get(baseId).equals(id)) {
+							newRecord = (SerializableQueryResult) result;
+							System.out.println("DEBUG: Found ID in results");
+							break;
+						}
+					} catch (Exception e) {
+						System.out.println("DEBUG: Error checking ID in results: " + e.getMessage());
+						e.printStackTrace();
 					}
 				}
 
+				System.out.println("DEBUG: Searching for ID in processedResults");
 				// Then we check the same id in processedResults
 				for(AQueryResult result : processedResults.getResults()) {
 					// If this is found 
-					if(((SerializableQueryResult) result).getValues().get(mergeId).equals(id)) {
-						// and was not found in the results iteration, then newRecord will be set to this result
-						if(newRecord == null) {
-							newRecord = (SerializableQueryResult) result;
-						// differently we iterate this results per column and we add whatever is present here
-						// that was not present in the previous check, keep in mind that we overwrite also the
-						// columns that were already present
-						} else {
-							for(String column : processedResults.getHeader())
-							{
-								if(!column.equals(ID))
+					try {
+						if(((SerializableQueryResult) result).getValues().get(mergeId).equals(id)) {
+							System.out.println("DEBUG: Found ID in processedResults");
+							// and was not found in the results iteration, then newRecord will be set to this result
+							if(newRecord == null) {
+								newRecord = (SerializableQueryResult) result;
+								System.out.println("DEBUG: Setting newRecord from processedResults");
+							// differently we iterate this results per column and we add whatever is present here
+							// that was not present in the previous check, keep in mind that we overwrite also the
+							// columns that were already present
+							} else {
+								System.out.println("DEBUG: Merging columns into existing record");
+								for(String column : processedResults.getHeader())
 								{
-									int columnId = processedResults.getHeader().indexOf(column);
-									((SerializableQueryResult) newRecord).getValues().add(((SerializableQueryResult) result).getValues().get(columnId));
+									if(!column.equals(ID))
+									{
+										int columnId = processedResults.getHeader().indexOf(column);
+										System.out.println("DEBUG: Adding column " + column + " at index " + columnId);
+										((SerializableQueryResult) newRecord).getValues().add(((SerializableQueryResult) result).getValues().get(columnId));
+									}
 								}
+								break;
 							}
-							break;
 						}
+					} catch (Exception e) {
+						System.out.println("DEBUG: Error checking ID in processedResults: " + e.getMessage());
+						e.printStackTrace();
 					}
 				}
 				
+				System.out.println("DEBUG: Checking if ID exists in mergedResults");
 				// Finally we check if this id is present also in mergedResults, that carry over all the results
 				// from previous queries/compound, if this was already present then we overwrite all the
 				// previous informations with the coming one
 				for(AQueryResult result : mergedResults.getResults()) {
-					if((((SerializableQueryResult) result).getValues().get(lastId).equals(id)) && newRecord != null) {
-						for(String column : mergedResults.getHeader())
+					try {
+						if((((SerializableQueryResult) result).getValues().get(lastId).equals(id)) && newRecord != null) {
+							System.out.println("DEBUG: ID already exists in mergedResults, updating columns");
+							for(String column : mergedResults.getHeader())
 							{
 								if(!column.equals(ID))
 								{
 									int columnId = mergedResults.getHeader().indexOf(column);
+									System.out.println("DEBUG: Updating column " + column + " at index " + columnId);
 									((SerializableQueryResult) result).getValues().add(((SerializableQueryResult) newRecord).getValues().get(columnId));
 								}
 							}
-						resultAdded = true;
-						break;
+							resultAdded = true;
+							System.out.println("DEBUG: Record updated in mergedResults");
+							break;
+						}
+					} catch (Exception e) {
+						System.out.println("DEBUG: Error checking ID in mergedResults: " + e.getMessage());
+						e.printStackTrace();
 					}
 				}
 				
 				// Instead if the id was not present in mergedResult we simply add this record
-				if(!resultAdded) { 
+				if(!resultAdded && newRecord != null) { 
+					System.out.println("DEBUG: Adding new record to mergedResults");
 					mergedResults.getResults().add(newRecord);
+				} else if(newRecord == null) {
+					System.out.println("DEBUG: WARNING - No record found for ID: " + id);
 				}
 			}
 			// Then we re-initialize results as mergedResults that contains all the results to pass to frontend
+			System.out.println("DEBUG: Setting results to mergedResults. Merged results count: " + 
+				mergedResults.getResults().size());
 			results = mergedResults;
 		}
 		else
 		{
+			System.out.println("DEBUG: Results null, assigning processedResults directly");
+			System.out.println("DEBUG: ProcessedResults count: " + 
+				(processedResults != null ? processedResults.getResults().size() : "null"));
 			results = processedResults;
 		}
-
+		System.out.println("DEBUG: Exiting mergeResults method");
 	}
 
 	/**
