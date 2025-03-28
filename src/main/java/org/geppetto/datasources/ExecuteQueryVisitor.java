@@ -127,7 +127,6 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 			e.printStackTrace();
 			return new GeppettoVisitingException(new GeppettoDataSourceException(e));
 		}
-		return super.caseProcessQuery(query);
 	}
 
 	/*
