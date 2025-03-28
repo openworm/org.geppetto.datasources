@@ -73,11 +73,11 @@ public class ExecuteMultipleQueriesVisitor extends DatasourcesSwitch<Object>
 	        }
 	        else
 	        {
-	            System.out.println("Cache MISS for query: " + key);
-	            ExecuteQueryVisitor executeQueryVisitor = new ExecuteQueryVisitor(variable, geppettoModelAccess);
-	            executeQueryVisitor.doSwitch(query);
-	            
 	            try {
+					System.out.println("Cache MISS for query: " + key);
+	            	ExecuteQueryVisitor executeQueryVisitor = new ExecuteQueryVisitor(variable, geppettoModelAccess);
+	            	executeQueryVisitor.doSwitch(query);
+	            
 	                List<String> resultIds = getIDs(executeQueryVisitor.getResults());
 	                System.out.println("Query execution complete. Results size: " + 
 	                    (executeQueryVisitor.getResults() != null ? executeQueryVisitor.getResults().getResults().size() : "null") + 
