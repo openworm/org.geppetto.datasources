@@ -55,8 +55,7 @@ public class ExecuteMultipleQueriesVisitor extends DatasourcesSwitch<Object>
 	@Override
 	public Object caseRunnableQuery(RunnableQuery object)
 	{
-	    try
-	    {
+	    try {
 	        Variable variable = geppettoModelAccess.getPointer(object.getTargetVariablePath()).getElements().get(0).getVariable();
 	        Query query = geppettoModelAccess.getQuery(object.getQueryPath());
 	        String key = getKey(query, variable);
@@ -101,8 +100,7 @@ public class ExecuteMultipleQueriesVisitor extends DatasourcesSwitch<Object>
 	            }
 	        }
 	    }
-	    catch(GeppettoModelException | GeppettoDataSourceException e)
-	    {
+	    catch(GeppettoModelException e) {  // Removed GeppettoDataSourceException
 	        System.out.println("ERROR in caseRunnableQuery: " + e.getMessage());
 	        e.printStackTrace();
 	        return new GeppettoVisitingException(e);
