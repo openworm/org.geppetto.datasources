@@ -90,7 +90,6 @@ public abstract class ADataSourceService extends AService implements IDataSource
 		}
 	}
 
-	@Override
 	public QueryResults execute(List<RunnableQuery> queries, int pageSize, int page) throws GeppettoDataSourceException
 	{
 		try
