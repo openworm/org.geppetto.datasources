@@ -102,7 +102,10 @@ public class SOLRresponseProcessor implements IQueryResponseProcessor
 						results.getHeader().add(key);
 					}
 				}
-				results.getResults().add(resultRow);
+				if(!resultRow.getValues().isEmpty())
+				{
+					results.getResults().add(resultRow);
+				}
 			}
 		}
 		else
