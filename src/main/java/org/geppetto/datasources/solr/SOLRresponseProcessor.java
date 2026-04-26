@@ -75,7 +75,15 @@ public class SOLRresponseProcessor implements IQueryResponseProcessor
 							else
 							{
 								String serializedJson = element.getAsString();
-								resultRow.getValues().add(parser.parse(serializedJson).getAsJsonObject());
+								JsonElement parsed = parser.parse(serializedJson);
+								if(parsed.isJsonArray())
+								{
+									resultRow.getValues().add(parsed.getAsJsonArray());
+								}
+								else
+								{
+									resultRow.getValues().add(parsed.getAsJsonObject());
+								}
 							}
 						}
 					}
