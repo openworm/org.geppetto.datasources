@@ -68,8 +68,17 @@ public class VFBqueryResponseProcessor implements IQueryResponseProcessor
 			// the empty case via results.getResults().isEmpty().
 			if(DEBUG)
 			{
-				System.out.println("VFBqueryResponseProcessor: malformed response (null/missing keys). Top-level keys: "
-						+ (response == null ? "<null>" : response.keySet()));
+				// Log the full envelope so we can see WHICH error the API
+				// returned (typical case: {"error": "Missing required parameter:
+				// id"} or "...query_type"), and from that deduce whether $ID
+				// substitution failed at the Velocity step or the chain wired
+				// the wrong queryType.
+				String body = (response == null ? "<null>" : response.toString());
+				if(body.length() > 800) { body = body.substring(0, 800) + "...[truncated]"; }
+				System.out.println("VFBqueryResponseProcessor: malformed response. Top-level keys="
+						+ (response == null ? "<null>" : response.keySet())
+						+ ", error=" + (response == null ? "<null>" : response.get("error"))
+						+ ", body=" + body);
 			}
 			return results;
 		}
