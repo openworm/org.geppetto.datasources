@@ -43,6 +43,13 @@ import org.geppetto.model.datasources.QueryResults;
 public class VFBqueryResponseProcessor implements IQueryResponseProcessor
 {
 
+	// org.geppetto.datasources bundle is NOT touched by the geppetto-vfb dev
+	// build's `sed s@Boolean debug=...@true@` step (the sed only walks
+	// uk.ac.vfb.geppetto/). For early-migration diagnostics this is wired on
+	// permanently; flip back to false once Shape-A queries are confirmed
+	// rendering correctly on v2-dev.
+	private static final boolean DEBUG = true;
+
 	/*
 	 * (non-Javadoc)
 	 *
@@ -59,11 +66,25 @@ public class VFBqueryResponseProcessor implements IQueryResponseProcessor
 			// Empty / malformed response — return an empty QueryResults so the
 			// chain continues without throwing. Downstream processors can detect
 			// the empty case via results.getResults().isEmpty().
+			if(DEBUG)
+			{
+				System.out.println("VFBqueryResponseProcessor: malformed response (null/missing keys). Top-level keys: "
+						+ (response == null ? "<null>" : response.keySet()));
+			}
 			return results;
 		}
 
 		Map<String, Map<String, Object>> headers = (Map<String, Map<String, Object>>) response.get("headers");
 		List<Map<String, Object>> rows = (List<Map<String, Object>>) response.get("rows");
+
+		if(DEBUG)
+		{
+			System.out.println("VFBqueryResponseProcessor: headers type=" + (headers == null ? "<null>" : headers.getClass().getName())
+					+ ", header keys=" + (headers == null ? "<null>" : headers.keySet())
+					+ ", rows type=" + (rows == null ? "<null>" : rows.getClass().getName())
+					+ ", rows.size=" + (rows == null ? -1 : rows.size())
+					+ ", response.count=" + response.get("count"));
+		}
 
 		// Sort columns by `order` (selection_id is conventionally -1 so it lands first).
 		// Stable for ties; missing order treated as Integer.MAX_VALUE so unspecified columns sink to the end.
@@ -104,6 +125,16 @@ public class VFBqueryResponseProcessor implements IQueryResponseProcessor
 				}
 				results.getResults().add(resultRow);
 			}
+		}
+
+		if(DEBUG)
+		{
+			System.out.println("VFBqueryResponseProcessor: built QueryResults"
+					+ " header=" + results.getHeader()
+					+ " resultsRows=" + results.getResults().size()
+					+ (results.getResults().isEmpty()
+							? ""
+							: " firstRowValues=" + results.getResults().get(0).getValues()));
 		}
 
 		return results;
