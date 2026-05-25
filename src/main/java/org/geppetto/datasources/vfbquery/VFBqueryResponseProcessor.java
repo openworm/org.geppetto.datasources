@@ -129,12 +129,19 @@ public class VFBqueryResponseProcessor implements IQueryResponseProcessor
 
 		if(DEBUG)
 		{
+			// Cast to the concrete QueryResult (the only subclass we emit here)
+			// so getValues() resolves — AQueryResult is abstract and does not
+			// expose it. Same EClass pitfall that originally broke
+			// VFBqueryJsonProcessor; do NOT re-introduce on AQueryResult here.
+			String firstRow = "";
+			if(!results.getResults().isEmpty())
+			{
+				firstRow = " firstRowValues=" + ((QueryResult) results.getResults().get(0)).getValues();
+			}
 			System.out.println("VFBqueryResponseProcessor: built QueryResults"
 					+ " header=" + results.getHeader()
 					+ " resultsRows=" + results.getResults().size()
-					+ (results.getResults().isEmpty()
-							? ""
-							: " firstRowValues=" + results.getResults().get(0).getValues()));
+					+ firstRow);
 		}
 
 		return results;
