@@ -107,17 +107,23 @@ public class VFBqueryResponseProcessor implements IQueryResponseProcessor
 			}
 		});
 
-		// Preserve the column-id → title mapping so downstream processors can introspect.
-		// We add titles to the header in column order, but also stash the raw column id
-		// as the row value key so a downstream processor can re-derive the per-column type.
+		// Emit the API column id (e.g. "id", "label", "outputs", "tags",
+		// "upstream_class", "total_n") as the QueryResults header — NOT the
+		// human-readable `title`. The downstream uk.ac.vfb.geppetto
+		// VFBqueryJsonProcessor maps these stable API ids to the legacy V2
+		// frontend column names (matching queryBuilderConfiguration.js
+		// displayName entries), so the existing table renderer keeps its
+		// custom components, click handlers and sort behaviour.
+		// (Titles like "Outputs" / "Inputs" / "% Connected" are not stable
+		// matchers — they often differ from V2 displayNames by spaces vs
+		// underscores, capitalisation, or word choice.)
 		Map<String, String> idToTitle = new LinkedHashMap<>();
 		for(Map.Entry<String, Map<String, Object>> col : orderedColumns)
 		{
 			String colId = col.getKey();
 			Object title = col.getValue().get("title");
-			String headerLabel = title != null ? title.toString() : colId;
-			results.getHeader().add(headerLabel);
-			idToTitle.put(colId, headerLabel);
+			results.getHeader().add(colId);
+			idToTitle.put(colId, title != null ? title.toString() : colId);
 		}
 
 		// Walk rows in the same column order; preserve Object types so number/list/etc.
