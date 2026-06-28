@@ -190,7 +190,7 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 					// distinguish empty $ID substitution from a malformed template,
 					// and to confirm cache-key equivalence with V3 frontend traffic.
 					System.out.println("ExecuteQueryVisitor: "
-							+ dataSourceService.getConnectionType() + " " + url + processedQueryString
+							+ dataSourceService.getConnectionType() + " " + url + (processedQueryString == null || processedQueryString.isEmpty() ? "" : "?" + processedQueryString)
 							+ "  (variable.id=" + (getVariable() == null ? "<null>" : getVariable().getId())
 							+ ", queryString=" + queryString + ", count=" + count + ")");
 
