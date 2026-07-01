@@ -227,6 +227,26 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 	 */
 	private void processResponse(String response, ADataSourceService dataSourceService) throws GeppettoDataSourceException
 	{
+		/*
+		 * An upstream timeout or proxy error (e.g. a 504 Gateway Time-out from
+		 * the cache/query service) returns an HTML body, not JSON. Detect a
+		 * null/empty/non-JSON response up front and fail with a clear, correlated
+		 * error instead of letting Gson throw an opaque JsonSyntaxException
+		 * ("Expected BEGIN_OBJECT but was STRING") deeper down -- that previously
+		 * surfaced as a confusing parse crash and left the load wedged rather
+		 * than reporting a clean datasource failure the client can recover from.
+		 */
+		if(response == null || response.trim().isEmpty())
+		{
+			throw new GeppettoDataSourceException("Empty response from datasource (likely an upstream timeout).");
+		}
+		String trimmedResponse = response.trim();
+		if(!trimmedResponse.startsWith("{") && !trimmedResponse.startsWith("["))
+		{
+			String snippet = trimmedResponse.length() > 200 ? trimmedResponse.substring(0, 200) : trimmedResponse;
+			System.out.println("Non-JSON response from datasource (likely an upstream timeout/504): " + snippet);
+			throw new GeppettoDataSourceException("Non-JSON response from datasource (likely an upstream timeout/504).");
+		}
 		try{
 			String customJson = "";
 			if(response.startsWith("[")) {
