@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.eclipse.emf.ecore.EObject;
 import org.geppetto.core.common.GeppettoHTTPClient;
+import org.geppetto.core.datasources.QueryPagingContext;
 import org.geppetto.core.common.GeppettoInitializationException;
 import org.geppetto.core.common.JSONUtility;
 import org.geppetto.core.datasources.GeppettoDataSourceException;
@@ -177,6 +178,10 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 					Map<String, Object> properties = new HashMap<String, Object>();
 					properties.put(ID, getVariable().getId());
 					properties.put("QUERY", queryString);
+					// Request-scoped paging (client-driven load-all): the vf b.xmi query
+					// string may reference $OFFSET/$LIMIT; defaults keep non-paged queries unchanged.
+					properties.put("OFFSET", Integer.toString(QueryPagingContext.getOffset()));
+					properties.put("LIMIT", Integer.toString(QueryPagingContext.getLimit(10000)));
 
 					if(processingOutputMap != null)
 					{
