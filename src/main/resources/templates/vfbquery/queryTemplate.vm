@@ -1,1 +1,1 @@
-$QUERY
+$QUERY&offset=$OFFSET&limit=$LIMIT
