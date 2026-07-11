@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.geppetto.core.datasources.GeppettoDataSourceException;
+import org.geppetto.core.datasources.QueryPagingContext;
 import org.geppetto.core.model.GeppettoModelAccess;
 import org.geppetto.model.datasources.AQueryResult;
 import org.geppetto.model.datasources.BooleanOperator;
@@ -223,7 +224,13 @@ public class ExecuteMultipleQueriesVisitor extends DatasourcesSwitch<Object>
 	 */
 	private String getKey(Query query, Variable variable)
 	{
-		return query.getPath() + ":" + variable.getPath();
+		// Include request-scoped paging so each offset/limit page caches under a
+		// distinct key. Without this the first page's result is cached against
+		// the query+variable alone and every later page hits it, so the paged
+		// datasource query is never re-executed.
+		return query.getPath() + ":" + variable.getPath()
+				+ ":o" + QueryPagingContext.getOffset()
+				+ ":l" + QueryPagingContext.getLimit(10000);
 	}
 
 	/**
