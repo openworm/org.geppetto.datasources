@@ -1,1 +1,1 @@
-$QUERY&offset=$OFFSET&limit=$LIMIT
+$QUERY#if($OFFSET != "0")&offset=$OFFSET&limit=$LIMIT#end
