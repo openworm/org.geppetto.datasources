@@ -190,15 +190,6 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 
 					processedQueryString = VelocityUtils.processTemplate(dataSourceService.getTemplate(), properties);
 
-					// TEMP DIAGNOSTIC — remove once VFBquery migration is dev-verified.
-					// Logs the actual URL/body geppetto is about to send so we can
-					// distinguish empty $ID substitution from a malformed template,
-					// and to confirm cache-key equivalence with V3 frontend traffic.
-					System.out.println("ExecuteQueryVisitor: "
-							+ dataSourceService.getConnectionType() + " " + url + (processedQueryString == null || processedQueryString.isEmpty() ? "" : "?" + processedQueryString)
-							+ "  (variable.id=" + (getVariable() == null ? "<null>" : getVariable().getId())
-							+ ", queryString=" + queryString + ", count=" + count + ")");
-
 					String response = null;
 					switch(dataSourceService.getConnectionType())
 					{
