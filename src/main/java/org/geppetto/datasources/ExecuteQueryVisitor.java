@@ -190,18 +190,57 @@ public class ExecuteQueryVisitor extends DatasourcesSwitch<Object>
 
 					processedQueryString = VelocityUtils.processTemplate(dataSourceService.getTemplate(), properties);
 
+					// Retry transient datasource failures (upstream 504/timeout, empty or
+					// non-JSON responses from the cache/query service). A short retry recovers
+					// most transient blips without failing the whole query.
 					String response = null;
-					switch(dataSourceService.getConnectionType())
+					int maxAttempts = 3;
+					long retryBaseDelayMs = 1000;
+					GeppettoDataSourceException lastError = null;
+					for(int attempt = 1; attempt <= maxAttempts; attempt++)
 					{
-						case GET:
-							response = GeppettoHTTPClient.doGET(url, processedQueryString);
+						try
+						{
+							switch(dataSourceService.getConnectionType())
+							{
+								case GET:
+									response = GeppettoHTTPClient.doGET(url, processedQueryString);
+									break;
+								case POST:
+									response = GeppettoHTTPClient.doJSONPost(url, processedQueryString);
+									break;
+							}
+							processResponse(response, dataSourceService);
+							lastError = null;
 							break;
-						case POST:
-							response = GeppettoHTTPClient.doJSONPost(url, processedQueryString);
-							break;
+						}
+						catch(GeppettoDataSourceException e)
+						{
+							lastError = e;
+							// Include the variable id + full request so the failure is debuggable.
+							System.out.println("Datasource query attempt " + attempt + " of " + maxAttempts
+								+ " failed for [" + getVariable().getId() + "] " + url + "?" + processedQueryString
+								+ " : " + e.getMessage());
+							if(attempt < maxAttempts)
+							{
+								try
+								{
+									Thread.sleep(retryBaseDelayMs * attempt);
+								}
+								catch(InterruptedException ie)
+								{
+									Thread.currentThread().interrupt();
+									break;
+								}
+							}
+						}
 					}
-
-					processResponse(response, dataSourceService);
+					if(lastError != null)
+					{
+						// All retries exhausted: surface the clean, correlated error (caught below)
+						// so the client can recover, rather than silently returning no results.
+						throw lastError;
+					}
 				}
 			}
 			catch(GeppettoDataSourceException e)
