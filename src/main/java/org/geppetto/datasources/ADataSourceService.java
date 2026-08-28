@@ -2,9 +2,7 @@
 package org.geppetto.datasources;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.emf.common.util.EList;
 import org.geppetto.core.datasources.GeppettoDataSourceException;
@@ -45,10 +43,6 @@ public abstract class ADataSourceService extends AService implements IDataSource
 
 	private GeppettoModelAccess geppettoModelAccess;
 
-	// Cache is shared
-	private static Map<String, QueryResults> cachedResults = new LinkedHashMap<String, QueryResults>();
-	private static Map<String, List<String>> cachedIds = new LinkedHashMap<String, List<String>>();
-
 	public ADataSourceService(String dataSourceTemplate)
 	{
 		this.dataSourceTemplate = dataSourceTemplate;
@@ -66,7 +60,7 @@ public abstract class ADataSourceService extends AService implements IDataSource
 	{
 		try
 		{
-			ExecuteMultipleQueriesVisitor executeMultipleQueriesVisitor = new ExecuteMultipleQueriesVisitor(geppettoModelAccess, cachedResults, cachedIds);
+			ExecuteMultipleQueriesVisitor executeMultipleQueriesVisitor = new ExecuteMultipleQueriesVisitor(geppettoModelAccess);
 			GeppettoModelTraversal.apply((EList) queries, executeMultipleQueriesVisitor);
 			return executeMultipleQueriesVisitor.getCount();
 		}
@@ -81,7 +75,7 @@ public abstract class ADataSourceService extends AService implements IDataSource
 	{
 		try
 		{
-			ExecuteMultipleQueriesVisitor executeMultipleQueriesVisitor = new ExecuteMultipleQueriesVisitor(geppettoModelAccess, cachedResults, cachedIds);
+			ExecuteMultipleQueriesVisitor executeMultipleQueriesVisitor = new ExecuteMultipleQueriesVisitor(geppettoModelAccess);
 			GeppettoModelTraversal.apply((EList) queries, executeMultipleQueriesVisitor);
 			return executeMultipleQueriesVisitor.getResults();
 		}

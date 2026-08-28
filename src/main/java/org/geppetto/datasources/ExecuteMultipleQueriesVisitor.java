@@ -6,9 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.geppetto.core.datasources.GeppettoDataSourceException;
-import org.geppetto.core.datasources.QueryPagingContext;
 import org.geppetto.core.model.GeppettoModelAccess;
 import org.geppetto.model.datasources.AQueryResult;
 import org.geppetto.model.datasources.BooleanOperator;
@@ -38,16 +36,11 @@ public class ExecuteMultipleQueriesVisitor extends DatasourcesSwitch<Object>
 	private List<String> finalIds = new ArrayList<String>();
 	private QueryResults finalResults = DatasourcesFactory.eINSTANCE.createQueryResults();
 
-	private Map<String, QueryResults> cachedResults;
-	private Map<String, List<String>> cachedIds;
-
 	private static final String ID = "ID";
 
-	public ExecuteMultipleQueriesVisitor(GeppettoModelAccess geppettoModelAccess, Map<String, QueryResults> cachedResults, Map<String, List<String>> cachedIds)
+	public ExecuteMultipleQueriesVisitor(GeppettoModelAccess geppettoModelAccess)
 	{
 		this.geppettoModelAccess = geppettoModelAccess;
-		this.cachedResults = cachedResults;
-		this.cachedIds = cachedIds;
 	}
 
 	@Override
@@ -58,25 +51,22 @@ public class ExecuteMultipleQueriesVisitor extends DatasourcesSwitch<Object>
 
 			Variable variable = geppettoModelAccess.getPointer(object.getTargetVariablePath()).getElements().get(0).getVariable();
 			Query query = geppettoModelAccess.getQuery(object.getQueryPath());
-			String key = getKey(query, variable);
 
-			if(cachedResults.containsKey(key))
-			{
-				QueryResults cachedResult = EcoreUtil.copy(cachedResults.get(key));
-				results.put(cachedResult, object.getBooleanOperator());
-				ids.put(cachedResult, new ArrayList<String>());
-				ids.get(cachedResult).addAll(cachedIds.get(key));
-			}
-			else
-			{
-				ExecuteQueryVisitor executeQueryVisitor = new ExecuteQueryVisitor(variable, geppettoModelAccess);
-				executeQueryVisitor.doSwitch(query);
-				List<String> resultIds = getIDs(executeQueryVisitor.getResults());
-				cache(key, EcoreUtil.copy(executeQueryVisitor.getResults()), resultIds);
-				results.put(executeQueryVisitor.getResults(), object.getBooleanOperator());
-				ids.put(executeQueryVisitor.getResults(), new ArrayList<String>());
-				ids.get(executeQueryVisitor.getResults()).addAll(resultIds);
-			}
+			/*
+			 * No server-side caching of query results: every execution hits the
+			 * datasource (the v3-cached nginx layer is the cache for VFBquery, on
+			 * disk and keyed by URL). The previous static JVM-wide cache retained
+			 * up to 11 full QueryResults objects across all sessions and users
+			 * indefinitely, and deep-copied (EcoreUtil.copy) every entry twice -
+			 * once on insert and once per hit - which for large result sets held
+			 * tens of MB per entry for the lifetime of the container (VFB2 #458).
+			 */
+			ExecuteQueryVisitor executeQueryVisitor = new ExecuteQueryVisitor(variable, geppettoModelAccess);
+			executeQueryVisitor.doSwitch(query);
+			List<String> resultIds = getIDs(executeQueryVisitor.getResults());
+			results.put(executeQueryVisitor.getResults(), object.getBooleanOperator());
+			ids.put(executeQueryVisitor.getResults(), new ArrayList<String>());
+			ids.get(executeQueryVisitor.getResults()).addAll(resultIds);
 
 		}
 		catch(GeppettoModelException | GeppettoDataSourceException e)
@@ -198,39 +188,6 @@ public class ExecuteMultipleQueriesVisitor extends DatasourcesSwitch<Object>
 			}
 		}
 		return finalResults;
-	}
-
-	/**
-	 * @param key
-	 * @param results
-	 */
-	private void cache(String key, QueryResults results, List<String> ids)
-	{
-		if(cachedResults.size() > 10)
-		{
-			cachedResults.remove(cachedResults.keySet().iterator().next());
-			cachedIds.remove(cachedIds.keySet().iterator().next());
-		}
-		cachedResults.put(key, results);
-		cachedIds.put(key, new ArrayList<String>());
-		cachedIds.get(key).addAll(ids);
-
-	}
-
-	/**
-	 * @param query
-	 * @param variable
-	 * @return
-	 */
-	private String getKey(Query query, Variable variable)
-	{
-		// Include request-scoped paging so each offset/limit page caches under a
-		// distinct key. Without this the first page's result is cached against
-		// the query+variable alone and every later page hits it, so the paged
-		// datasource query is never re-executed.
-		return query.getPath() + ":" + variable.getPath()
-				+ ":o" + QueryPagingContext.getOffset()
-				+ ":l" + QueryPagingContext.getLimit(10000);
 	}
 
 	/**
